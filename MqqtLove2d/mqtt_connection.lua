@@ -6,7 +6,8 @@ local sw2 = 2
 local led1State = gpio.LOW
 local ledState2 = gpio.LOW
 
-local channel = "1421229"
+local CHANNEL1 = "mc1"
+local CHANNEL2 = "mc2"
 local m
 
 wificonf = {
@@ -29,7 +30,7 @@ wificonf = {
                         if (data == 'a' or data == 's') then
                           print(data)
                         end
-                        if data == 'a' then
+                        if data == 's' then
                           if(led1State == gpio.LOW) then
                               gpio.write(led1, gpio.HIGH)
                               led1State = gpio.HIGH
@@ -37,29 +38,39 @@ wificonf = {
                               gpio.write(led1, gpio.LOW)
                               led1State = gpio.LOW
                           end
+                        elseif data == 'a' then
+                          if(led2State == gpio.LOW) then
+                              gpio.write(led2, gpio.HIGH)
+                              led2State = gpio.HIGH
+                          else
+                              gpio.write(led2, gpio.LOW)
+                              led2State = gpio.LOW
+                          end
                         end
                     end
                 )
 
-                m:subscribe(channel, 0,
+                m:subscribe(CHANNEL1, 0,
                     -- fç chamada qdo inscrição ok:
                     function (client)
                         print("subscribe success")
                         gpio.mode(led1, gpio.OUTPUT)
-
                         gpio.write(led1, gpio.LOW)
+
+                        gpio.mode(led2, gpio.OUTPUT)
+                        gpio.write(led2, gpio.LOW)
 
                         gpio.mode(sw1,gpio.INT,gpio.PULLUP)
                         gpio.mode(sw2,gpio.INT,gpio.PULLUP)
 
                         function pressedButton1()
                             print("Apertei botao 1")
-                            m:publish(channel, "apertei1", 0, 1)
+                            m:publish(CHANNEL1, "apertei1", 0, 1)
                         end
 
                         function pressedButton2()
                             print("Apertei botao 2")
-                            m:publish(channel, "apertei2", 0, 1)
+                            m:publish(CHANNEL1, "apertei2", 0, 1)
                         end
 
                         gpio.trig(sw1, "down", pressedButton1)
@@ -70,6 +81,9 @@ wificonf = {
                         print("subscription failed reason: "..reason)
                     end
                 )
+
+
+
             end,
             -- callback em caso de falha
             function(client, reason)
@@ -82,3 +96,7 @@ wificonf = {
 
 wifi.setmode(wifi.STATION)
 wifi.sta.config(wificonf)
+
+-- owm_timer = tmr.create() -- 6s
+-- owm_timer:register(6000, tmr.ALARM_AUTO, get_weather) -- 6s
+-- owm_timer:start()
