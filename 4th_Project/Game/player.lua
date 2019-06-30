@@ -12,6 +12,9 @@ function PLAYER.newPlayer ()
   local rect_height = shipImg:getHeight()*3/4
   local rect_width = shipImg:getWidth()*3/4
 
+  local modes = {"BATTLING", "NAVIGATING"}
+  local curr_mode = modes[1]
+
   -- TODO GO BACK
   -- local speed = 2.5
   -- local fire_rate = 0.5 -- shoot step
@@ -29,23 +32,17 @@ function PLAYER.newPlayer ()
       -- Make ship look straight if it's not going to left or right
       shipImg = ship_img_lst[1]
       if love.keyboard.isDown('up') then player.incY(-speed) end
+
       if love.keyboard.isDown('down') then player.incY(speed) end
+
       if love.keyboard.isDown('left') then
-        player.incX(-speed)
         shipImg = ship_img_lst[2]
-      end
-      if love.keyboard.isDown('right') then
-        player.incX(speed)
-        shipImg = ship_img_lst[3]
+        player.incX(-speed)
       end
 
-      if (x + rect_width) > width then
-        x = 0 -- player switch sides from right to left
-      elseif x < 0 then
-        x = width - rect_width -- player switch sides from left to right
-      end
-      if y > (height - rect_height) then
-        y = height - rect_height -- player can't go any lower
+      if love.keyboard.isDown('right') then
+        shipImg = ship_img_lst[3]
+        player.incX(speed)
       end
     end,
 
@@ -54,8 +51,21 @@ function PLAYER.newPlayer ()
     getY = function () return y end,
     getYL = function () return y + rect_height end, -- Y Lower bound
     getXR = function () return x + rect_width end, -- most far right X
-    incX = function (nx) x = x + nx end,
-    incY = function (ny) y = y + ny end,
+
+    incX = function (nx)
+      x = x + nx
+      if (x + rect_width) > width then
+        x = 0 -- player switch sides from right to left
+      elseif x < 0 then
+        x = width - rect_width -- player switch sides from left to right
+      end
+    end,
+    incY = function (ny)
+      if ((y + ny) >= 0) and ((y + ny) <= (height - rect_height)) then
+        y = y + ny -- player cant get out of the screen during battles
+      end
+    end,
+
     getLastShot = function () return last_shot end,
     shoot_bullet = function () last_shot = love.timer.getTime() + fire_rate end,
     getHp = function () return health end,
@@ -70,6 +80,9 @@ function PLAYER.newPlayer ()
     getBulletSize = function () return bullet_size end,
     getLV = function () return level end,
     incLV = function () level = level + 1 end,
+
+    getMode = function () return curr_mode end,
+    setMode = function (m) curr_mode = m end,
 
     -- Change players attributes if an item is caught
     applyEffect = function (effType, effVal)
