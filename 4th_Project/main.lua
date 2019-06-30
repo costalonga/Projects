@@ -59,7 +59,7 @@ end
 
 
 --                                                                     -- Items
-local function newItem (sel, existence)
+local function newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   local width, height = love.graphics.getDimensions()
   local radius = 7.5
   local x = love.math.random(radius*4, width - 4*radius)
@@ -72,6 +72,11 @@ local function newItem (sel, existence)
   local blink = 0
   local active = true
   local created = love.timer.getTime()
+
+  local posX1 = iniX1
+  local posY1 = iniY1
+  local posX2 = iniX2
+  local posY2 = iniY2
 
   local function gotcha (posX1, posY1, posX2, posY2)
     if posX1 < x and posX2 > x then
@@ -99,11 +104,6 @@ local function newItem (sel, existence)
     while (created+existence) > love.timer.getTime() do
       -- make it blink
       blink = bit.band(1,blink+1) -- bitwise: 1 & blink+1
-      local posX1 = player.getX()
-      local posY1 = player.getY()
-      local posX2 = player.getXR()
-      local posY2 = player.getYL()
-      -- Check if player caught item
       if gotcha(posX1, posY1, posX2, posY2) then
         active = false
         break
@@ -122,6 +122,12 @@ local function newItem (sel, existence)
   return {
     update = exists(),
     getInactiveTime = function () return inactiveTime end,
+
+    setX1 = function (pos) posX1 = pos end,
+    setY1 = function (pos) posY1 = pos end,
+    setX2 = function (pos) posX2 = pos end,
+    setY2 = function (pos) posY2 = pos end,
+
     draw = function ()
       if active then
         if mode == "inc_speed" then
@@ -139,21 +145,29 @@ local function newItem (sel, existence)
 end
 
 --                                                       -- Item Generator List
-local function newItemGenerator ()
+local function newItemGenerator (iniX1, iniY1, iniX2, iniY2)
   local lst = {}
-  local item_respawn = love.math.random(6,8)
+  -- local item_respawn = love.math.random(6,8) -- TODO
+  local item_respawn = love.math.random(2,3)
   local await_time = love.timer.getTime() + item_respawn -- game starts without items
+
+  local posX1 = iniX1
+  local posY1 = iniY1
+  local posX2 = iniX2
+  local posY2 = iniY2
 
   local wait = function (seg)
     await_time = love.timer.getTime() + seg
-    item_respawn = love.math.random(4,20)
+    -- item_respawn = love.math.random(4,20) -- TODO
+    item_respawn = love.math.random(4,7)
+
     coroutine.yield()
   end
   local function generate_item()
     while true do
       local sel = love.math.random(1,4)
       local duration = love.math.random(5,15) -- time item will exists
-      table.insert(lst,newItem(sel, duration))
+      table.insert(lst, newItem(sel, duration, posX1, posY1, posX2, posY2))
       wait(item_respawn)
     end
   end
@@ -166,6 +180,12 @@ local function newItemGenerator ()
 
   return {
     update = startUpdate(),
+
+    setX1 = function (pos) posX1 = pos end,
+    setY1 = function (pos) posY1 = pos end,
+    setX2 = function (pos) posX2 = pos end,
+    setY2 = function (pos) posY2 = pos end,
+
     getWaitTime = function () return await_time end,
     getItemsList = function () return lst end,
     removeItem = function (i) table.remove(lst,i) end,
@@ -210,8 +230,14 @@ function love.load()
   bg.width=bg.image:getWidth()
   bg.height = bg.image:getHeight()
 
-  item_generator = newItemGenerator()
   player =  playerClass.newPlayer()
+
+  local posX1 = player.getX()
+  local posY1 = player.getY()
+  local posX2 = player.getXR()
+  local posY2 = player.getYL()
+
+  item_generator = newItemGenerator(posX1, posY1, posX2, posY2)
   bullets_list = {}
   listabls = {}
   for i = 1, 5 do
@@ -259,12 +285,23 @@ function love.update(dt)
   -- Update Items
   if item_generator.getWaitTime() <= nowTime then
     -- time between items creation
+    -- Initialize with Player Position to know if item was caught
+    item_generator.setX1(player.getX())
+    item_generator.setX2(player.getXR())
+    item_generator.setY1(player.getY())
+    item_generator.setY2(player.getYL())
     item_generator.update()
   end
   local items_lst = item_generator.getItemsList()
   for i = #items_lst,1,-1 do
     if items_lst[i].getInactiveTime() <= nowTime then
+      -- Update Player Position to know if item was caught
+      items_lst[i].setX1(player.getX())
+      items_lst[i].setX2(player.getXR())
+      items_lst[i].setY1(player.getY())
+      items_lst[i].setY2(player.getYL())
       local status = items_lst[i].update()
+
       if status == false then
         item_generator.removeItem(i)
       end
@@ -287,7 +324,7 @@ function love.update(dt)
   -- Update Bullets
   for i = #bullets_list,1,-1 do
     if bullets_list[i].getWaitTime() <= nowTime then
-      local status = bullets_list[i].update()
+      local status = bullets_list[i].update(posX1, posY1, posX2, posY2) -- TODO: test
       if status == false then
         table.remove(bullets_list, i)
       end
