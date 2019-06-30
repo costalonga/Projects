@@ -134,5 +134,5 @@ wifi.sta.config(wificonf)
 
 owm_timer = tmr.create() --15min
 --owm_timer:register(60000*15, tmr.ALARM_AUTO, get_weather)
-owm_timer:register(3000, tmr.ALARM_AUTO, send_data) -- 3s
+owm_timer:register(10000, tmr.ALARM_AUTO, send_data) -- 10s
 owm_timer:start()
