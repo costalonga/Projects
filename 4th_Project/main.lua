@@ -29,9 +29,14 @@ function love.load()
     large =  love.graphics.setNewFont("Game/Images/Starjedi.ttf", 30)
   }
 
+  -- TODO
+  heightLV = love.graphics.getHeight()
+  widthLV = love.graphics.getWidth()
+  TEMP_SWITCH = false
+
   --  Load Images
   bg = {image=love.graphics.newImage("Game/Images/bg.png"), x1=0, y1=0, x2=0, y2=0, width=0, height=0}
-  bg.width=bg.image:getWidth()
+  bg.width = bg.image:getWidth()
   bg.height = bg.image:getHeight()
 
   player =  playerClass.newPlayer()
@@ -53,6 +58,36 @@ end
 
 --                                                                                 LOVE DRAW
 function love.draw()
+
+  if TEMP_SWITCH then
+    --          FLIP
+    -- love.graphics.scale(1,-1)
+    -- love.graphics.translate(0, -heightLV)
+
+    --         MIRROR
+    -- TODO: Make it as an "Item" just to confuse everything
+    -- love.graphics.scale(-1, 1)
+    -- love.graphics.translate(-widthLV, 0)
+
+    -- -- rotate around the center of the screen by angle radians
+    local angle = math.pi/2
+
+    -- love.graphics.translate(-widthLV, 0)
+
+    love.graphics.translate(widthLV/2, heightLV/2)
+  	love.graphics.rotate(angle)
+    love.graphics.translate(-widthLV/2, -heightLV/2)
+    -- love.graphics.translate(-heightLV/2, -widthLV/2)
+    love.graphics.translate(0, 0)
+
+    -- love.graphics.scale(-1, 1)
+    -- love.graphics.translate(-widthLV, 0)
+
+    -- love.graphics.rotate( math.pi/2 )
+
+
+  end
+
   love.graphics.draw(bg.image, bg.x1, bg.y1)
   love.graphics.draw(bg.image, bg.x2, bg.y2)
   love.graphics.setFont(font.normal)
@@ -124,6 +159,10 @@ function love.update(dt)
     end
   end
   if #listabls == 0 then
+
+    --TODO CHANGE
+    TEMP_SWITCH = not TEMP_SWITCH
+
     player.incLV()
     local level = player.getLV()
     for i=1, 5*level do

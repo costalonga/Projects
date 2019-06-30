@@ -11,8 +11,13 @@ function PLAYER.newPlayer ()
   local y = 200
   local rect_height = shipImg:getHeight()*3/4
   local rect_width = shipImg:getWidth()*3/4
-  local speed = 2.5
-  local fire_rate = 0.5 -- shoot step
+
+  -- TODO GO BACK
+  -- local speed = 2.5
+  -- local fire_rate = 0.5 -- shoot step
+  local speed = 5.5
+  local fire_rate = 0.25 -- shoot step
+
   local last_shot = 0
   local health = 10
   local kill_count = 0

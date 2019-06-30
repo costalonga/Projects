@@ -5,7 +5,7 @@ local curr_directory = "Game/"
 function BULLET.newBullet (pSx, pSy, pBulletSize)
   local sx = pSx
   local sy = pSy
-  local size = pBulletSize*1.25
+  local size = pBulletSize*1.05
 
   local speed = 0.0005
   local step = 4.5

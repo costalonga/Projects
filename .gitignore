@@ -5,3 +5,5 @@ temp_connector.lua
 ESP8266_project/request_weather.lua
 ESP8266_project/temp.json
 ESP8266_project/weather_answer.json
+id_weather.json
+latlon_weather.json

@@ -7,7 +7,7 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   local radius = 7.5
   local x = love.math.random(radius*4, width - 4*radius)
   local y = love.math.random(height/5, height - 4*radius)
-  local clock = 0.25
+  local clock = 0.2
   local inactiveTime = 0
   local modes = { "inc_speed", "inc_fire_rate", "dec_fire_rate", "dec_speed"}
   local mode = modes[sel]
