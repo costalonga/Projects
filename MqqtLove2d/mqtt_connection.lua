@@ -6,7 +6,8 @@ local sw2 = 2
 local m
 -- local CHANNEL1 = "1421229"
 local CHANNEL1 = "1421229/1"
-local CHANNEL1 = "1421229/2"
+local CHANNEL2 = "1421229/2"
+
 local led1State = gpio.LOW
 local led2State = gpio.LOW
 
@@ -21,7 +22,7 @@ gpio.mode(sw2,gpio.INT,gpio.PULLUP)
 function startMqttClientConnection()
   local clientID = "blip"
   -- m = mqtt.Client("blip", 120)
-  m = mqtt.Client(clientID, 180)
+  m = mqtt.Client(clientID, 120)
 
 --  local mosquitoIP = "test.mosquitto.org"
   local mosquitoIP = "85.119.83.194"
@@ -30,19 +31,53 @@ function startMqttClientConnection()
      -- callback em caso de sucesso
     function(client)
       print("connected")
+
+      gpio.mode(led2, gpio.OUTPUT)
+      gpio.write(led2, gpio.LOW)
+      gpio.mode(sw2,gpio.INT,gpio.PULLUP)
+
+      gpio.mode(led1, gpio.OUTPUT)
+      gpio.write(led1, gpio.LOW)
+      gpio.mode(sw1,gpio.INT,gpio.PULLUP)
+
+      function pressedButton1()
+          print("Apertei botao 1 \tchn:" .. CHANNEL1)
+          -- m:publish("1421229/1", "but1", 0, 1)
+          m:publish("1421229/2", "but1", 0, 1)
+      end
+      function pressedButton2()
+          print("Apertei botao 2 \tchn:" .. CHANNEL2)
+
+          m:publish("1421229/2", "but2", 0, 1)
+      end
+      gpio.trig(sw1, "down", pressedButton1)
+      gpio.trig(sw2, "down", pressedButton2)
+
+      -- fç chamada qdo inscrição ok:
+      m:subscribe(CHANNEL1, 0,
+          function (client)
+              print("subscribed to channel /1")
+          end,
+          --fç chamada em caso de falha:
+          function(client, reason)
+              print("subscription to /1 failed reason: "..reason)
+          end
+      )
+
+      -- fç chamada qdo inscrição ok:
+      m:subscribe(CHANNEL2, 0,
+          function (client)
+              print("subscribed to channel /2")
+          end,
+          --fç chamada em caso de falha:
+          function(client, reason)
+              print("subscription to /2 failed reason: "..reason)
+          end
+      )
+
       m:on("message",
-      -- m:on("overflow",
-      -- m:on("offline",
-      -- m:on("connect",
-            function(client, topic, data)
-              -- if (data == 'a' or data == 's') then
-              --   print(topic .. ":" .. data)
-              -- end
-              print("T: "..topic.." |D: "..data)
-              if data == 's' or data == 'a' then
-                -- print("C: "..client.." |T: "..topic.." |D: "..data)
-                print("T: "..topic.." |D: "..data)
-              end
+          function(client, topic, data)
+              print("CHEGOU NO NODE: T: "..topic.." |D: "..data .. "\n")
               if data == 's' then
                 if(led1State == gpio.LOW) then
                     gpio.write(led1, gpio.HIGH)
@@ -64,37 +99,6 @@ function startMqttClientConnection()
             end
           )
 
-      -- fç chamada qdo inscrição ok:
-      m:subscribe({CHANNEL1=1, CHANNEL2=2},
-      -- m:subscribe(CHANNEL1, 0,
-          -- fç chamada qdo inscrição ok:
-          -- VERDE
-          function (client)
-              print("subscribed to channels, success")
-              gpio.mode(led2, gpio.OUTPUT)
-              gpio.write(led2, gpio.LOW)
-              gpio.mode(sw2,gpio.INT,gpio.PULLUP)
-
-              gpio.mode(led1, gpio.OUTPUT)
-              gpio.write(led1, gpio.LOW)
-              gpio.mode(sw1,gpio.INT,gpio.PULLUP)
-
-              function pressedButton1()
-                  print("Apertei botao 1")
-                  m:publish("1421229/1", "but1", 0, 1)
-              end
-              function pressedButton2()
-                  print("Apertei botao 2")
-                  m:publish("1421229/2", "but2", 0, 1)
-              end
-              gpio.trig(sw1, "down", pressedButton1)
-              gpio.trig(sw2, "down", pressedButton2)
-          end,
-          --fç chamada em caso de falha:
-          function(client, reason)
-              print("subscription failed reason: "..reason)
-          end
-      )
     end,
     -- callback em caso de falha
     function(client, reason)

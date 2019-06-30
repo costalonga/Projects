@@ -2,12 +2,14 @@ local mqtt = require("mqtt_library")
 
 local CHANNEL1 = "1421229/1"
 local CHANNEL2 = "1421229/2"
+-- local CHANNEL3 = "mcc"
 -- local CHANNEL1 = "1421229"
 -- local CHANNEL2 = "1421229"
 
 function mqttcb(topic, message)
    print("Received from topic: " .. topic .. " - message:" .. message)
-   if topic == CHANNEL1 and message == "but1" then
+   -- if topic == CHANNEL1 and message == "but1" then
+   if topic == CHANNEL2 and message == "but1" then
       controle1 = not controle1
    end
    if topic == CHANNEL2 and message == "but2" then
@@ -20,8 +22,9 @@ function love.keypressed(key)
   if key == 'a' then
     mqtt_client:publish(CHANNEL1, 'a')
 --    chan = CHANNEL1 -- Channel 1 VERDE
-  elseif key == 's' then
-    mqtt_client:publish(CHANNEL2, 's')
+  end
+  if key == 's' then
+    mqtt_client:publish(CHANNEL1, 's')
 --    chan = CHANNEL2  -- Channel 2 RED
   end
 
@@ -38,7 +41,7 @@ function love.load()
   controle2 = false
   mqtt_client = mqtt.client.create("85.119.83.194", 1883, mqttcb)
   mqtt_client:connect("cliente love 1")
-  mqtt_client:subscribe({CHANNEL1, CHANNEL2})
+  mqtt_client:subscribe({CHANNEL1, CHANNEL2, CHANNEL3})
   -- mqtt_client:subscribe({CHANNEL1})
 end
 
