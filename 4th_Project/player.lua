@@ -19,6 +19,8 @@ function PLAYER.newPlayer ()
   local level = 1
   local bullet_size = 1
 
+
+
   return {
     update = function (dt)
       -- Make ship look straight if it's not going to left or right
@@ -65,6 +67,17 @@ function PLAYER.newPlayer ()
     getBulletSize = function () return bullet_size end,
     getLV = function () return level end,
     incLV = function () level = level + 1 end,
+
+    applyEffect = function (effType, effVal)
+      if effType == "inc_speed" then player.incSpeed(effVal)
+      elseif effType == "inc_fire_rate" then
+        if player.getFireRate() >= 0.1 then
+          player.incFireRate(effVal)
+        end
+      elseif effType == "dec_fire_rate" then player.incFireRate(effVal)
+      elseif effType == "dec_speed" then player.incSpeed(effVal) end
+    end,
+
 
     draw = function ()
       love.graphics.rectangle("line", x, y, rect_width, rect_height)

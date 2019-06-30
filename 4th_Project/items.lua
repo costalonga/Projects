@@ -20,21 +20,33 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   local posX2 = iniX2
   local posY2 = iniY2
 
+  local caught = false
+  local effect_value = 0
+
   local function gotcha (posX1, posY1, posX2, posY2)
     if posX1 < x and posX2 > x then
       if posY1 < y and posY2 > y then
         active = false
-        -- TODO
-        -- if mode == "inc_speed" then player.incSpeed(0.55)
-        -- elseif mode == "inc_fire_rate" then
-        --   if player.getFireRate() >= 0.1 then
-        --     player.incFireRate(-0.1)
-        --   end
-        -- elseif mode == "dec_fire_rate" then player.incFireRate(0.1)
-        -- elseif mode == "dec_speed" then player.incSpeed(-0.3) end
-        return true
+
+        -- TODO: change effects inc to real value but wait untill test finishes
+        if mode == "inc_speed" then
+          -- effect_value = 0.55
+          effect_value = 1.55
+
+        elseif mode == "inc_fire_rate" then
+          -- effect_value = -0.1
+          effect_value = -0.55
+
+        elseif mode == "dec_fire_rate" then
+          -- effect_value = 0.1
+          effect_value = 0.25
+
+        elseif mode == "dec_speed" then
+          -- effect_value = -0.3
+          effect_value = -0.55
+        end
+        caught = true
       end
-      return false
     end
   end
 
@@ -47,7 +59,9 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
     while (created+existence) > love.timer.getTime() do
       -- make it blink
       blink = bit.band(1,blink+1) -- bitwise: 1 & blink+1
-      if gotcha(posX1, posY1, posX2, posY2) then
+
+      gotcha(posX1, posY1, posX2, posY2)
+      if caught then
         active = false
         break
       end
@@ -56,6 +70,7 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   end
 
   local function exists ()
+
     local wrapping = coroutine.create(stay)
     return function ()
       return coroutine.resume(wrapping)
@@ -70,6 +85,10 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
     setY1 = function (pos) posY1 = pos end,
     setX2 = function (pos) posX2 = pos end,
     setY2 = function (pos) posY2 = pos end,
+
+    getEffectType = function () return mode end,
+    getEffectValue = function () return effect_value end,
+    CaughtIt = function () return caught end,
 
     draw = function ()
       if active then
