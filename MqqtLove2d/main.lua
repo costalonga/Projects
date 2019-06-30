@@ -1,5 +1,5 @@
 
-local playerClass = require("player")
+local playerClass = require("mqtt_player")
 local mqtt = require("mqtt_library")
 
 local CHANNEL1 = "1421229/1"

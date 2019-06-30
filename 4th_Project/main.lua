@@ -144,7 +144,7 @@ function love.update(dt)
   -- Update Bullets
   for i = #bullets_list,1,-1 do
     if bullets_list[i].getWaitTime() <= nowTime then
-      local status = bullets_list[i].update(posX1, posY1, posX2, posY2) 
+      local status = bullets_list[i].update(posX1, posY1, posX2, posY2)
       if status == false then
         if bullets_list[i].isEnemyDead() then
           player.incKillCount()
