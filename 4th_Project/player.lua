@@ -19,8 +19,6 @@ function PLAYER.newPlayer ()
   local level = 1
   local bullet_size = 1
 
-
-
   return {
     update = function (dt)
       -- Make ship look straight if it's not going to left or right
@@ -68,6 +66,7 @@ function PLAYER.newPlayer ()
     getLV = function () return level end,
     incLV = function () level = level + 1 end,
 
+    -- Change players attributes if an item is caught
     applyEffect = function (effType, effVal)
       if effType == "inc_speed" then player.incSpeed(effVal)
       elseif effType == "inc_fire_rate" then

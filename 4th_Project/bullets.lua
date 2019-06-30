@@ -1,0 +1,68 @@
+local BULLET = {}
+
+--                                                                    -- Bullet
+function BULLET.newBullet (pSx, pSy, pBulletSize)
+   -- TODO addit somewhere else
+  -- local sx = player.getXM()
+  -- local sy = player.getY()
+  -- local size = player.getBulletSize()*1.25
+
+  local sx = pSx
+  local sy = pSy
+  local size = pBulletSize*1.25
+
+  local speed = 0.0005
+  local step = 4.5
+  local bullet_wait = 0
+  local width, height = love.graphics.getDimensions( )
+  local bulletImg = love.graphics.newImage("Images/shot.png")
+  local radius = (bulletImg:getHeight()/2)*size
+  local active = true
+  local killed = false
+
+  local wait = function (seg)
+    bullet_wait = love.timer.getTime() + seg
+    coroutine.yield()
+  end
+  local function up()
+    while sy > 0 and active == true do
+      sy = sy - step -- *Para variar o "passo" da bullet
+      for j = 1,#listabls do
+        if listabls[j].affected(sx, sy, radius) then
+          active = false
+          listabls[j].setHp(-10)
+          if listabls[j].getHp() <= 0 then
+            table.remove(listabls, j) -- TODO CHANGE HERE TO ALLOW/NOT ALLOW DAMADGE FOR TESTS
+            killed = true
+            break
+          end
+        end
+      end
+      wait(speed) -- *Para variar o tempo de espera/velocidade da bullet
+    end
+  end
+  local function move ()
+    local wrapping = coroutine.create(up)
+    return function ()
+      return coroutine.resume(wrapping)
+    end
+  end
+
+  return {
+    update = move(),
+    getSX = function () return sx end,
+    getSY = function () return sy end,
+    setSX = function (x) sx = x end,
+    setSY = function (y) sy = y end,
+    isEnemyDead = function () return killed end,
+
+    getWaitTime = function () return bullet_wait end,
+    draw = function ()
+      if active then
+        love.graphics.draw(bulletImg, sx, sy, 0, size, size, radius, radius)
+      end
+    end
+  }
+end
+
+return (BULLET)
