@@ -1,10 +1,10 @@
 local PLAYER = {}
-
+local curr_directory = "Game/"
 --                                                                    -- Player
 function PLAYER.newPlayer ()
-  local ship_img_lst = {love.graphics.newImage("Images/ship.png"),
-    love.graphics.newImage("Images/l.png"),
-    love.graphics.newImage("Images/r.png")}
+  local ship_img_lst = {love.graphics.newImage(curr_directory .. "Images/ship.png"),
+    love.graphics.newImage(curr_directory .. "Images/l.png"),
+    love.graphics.newImage(curr_directory .. "Images/r.png")}
   local shipImg = ship_img_lst[1]
   local width, height = love.graphics.getDimensions( )
   local x = 200

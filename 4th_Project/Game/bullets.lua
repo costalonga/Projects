@@ -1,4 +1,5 @@
 local BULLET = {}
+local curr_directory = "Game/"
 
 --                                                                    -- Bullet
 function BULLET.newBullet (pSx, pSy, pBulletSize)
@@ -10,7 +11,7 @@ function BULLET.newBullet (pSx, pSy, pBulletSize)
   local step = 4.5
   local bullet_wait = 0
   local width, height = love.graphics.getDimensions( )
-  local bulletImg = love.graphics.newImage("Images/shot.png")
+  local bulletImg = love.graphics.newImage(curr_directory .. "Images/shot.png")
   local radius = (bulletImg:getHeight()/2)*size
   local active = true
   local killed = false

@@ -1,4 +1,5 @@
 local ITEMS = {}
+-- local curr_directory = "Game/"
 
 --                                                                     -- Items
 function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)

@@ -1,4 +1,5 @@
 local ENEMIES = {}
+local curr_directory = "Game/"
 
 --                                                                      -- Blip
 function ENEMIES.newBlip (life)
@@ -12,7 +13,7 @@ function ENEMIES.newBlip (life)
   local step = love.math.random(5, 12)
   local health = life
 
-  local blipImg = love.graphics.newImage("Images/blips.jpg")
+  local blipImg = love.graphics.newImage(curr_directory .. "Images/blips.jpg")
   local size = 0.25 -- blip.getBulletSize()0.25
   local rect_height = (blipImg:getHeight())*size
   local rect_width = (blipImg:getWidth())*size
@@ -77,7 +78,7 @@ function ENEMIES.newAttack (blipXM, blipYL)
   local attack_wait = 0
   local width, height = love.graphics.getDimensions()
   local playerDamadge = -1
-  local blipShotImg = love.graphics.newImage("Images/blipshot.png")
+  local blipShotImg = love.graphics.newImage(curr_directory .. "Images/blipshot.png")
   local size = 1 -- blip.getBulletSize()
   local radius = (blipShotImg:getHeight()/2)*size
 

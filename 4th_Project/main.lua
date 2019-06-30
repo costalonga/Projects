@@ -1,7 +1,7 @@
-local enemiesClass = require("enemies")
-local playerClass = require("player")
-local itemsClass = require("items")
-local bulletsClass = require("bullets")
+local enemiesClass = require("Game/enemies")
+local bulletsClass = require("Game/bullets")
+local playerClass = require("Game/player")
+local itemsClass = require("Game/items")
 
 --                                                                                Keypressed
 function love.keypressed(key)
@@ -23,23 +23,14 @@ end
 
 --                                                                                LOVE LOAD
 function love.load()
-  love.window.setTitle("Lua Game")
-
+  love.window.setTitle("Square Invaders")
   font =  {
-    normal = love.graphics.setNewFont("Images/Starjedi.ttf", 14),
-    large =  love.graphics.setNewFont("Images/Starjedi.ttf", 30)
+    normal = love.graphics.setNewFont("Game/Images/Starjedi.ttf", 14),
+    large =  love.graphics.setNewFont("Game/Images/Starjedi.ttf", 30)
   }
-
-  titlemenu = {
-    play=love.graphics.newImage("Images/play.png"),
-    width=0,
-    height=0
-  }
-  titlemenu.width = titlemenu.play:getWidth()
-  titlemenu.height = titlemenu.play:getHeight()
 
   --  Load Images
-  bg = {image=love.graphics.newImage("Images/bg.png"), x1=0, y1=0, x2=0, y2=0, width=0, height=0}
+  bg = {image=love.graphics.newImage("Game/Images/bg.png"), x1=0, y1=0, x2=0, y2=0, width=0, height=0}
   bg.width=bg.image:getWidth()
   bg.height = bg.image:getHeight()
 
