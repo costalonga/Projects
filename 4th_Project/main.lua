@@ -10,14 +10,10 @@ function love.keypressed(key)
     if (last_shot == 0) or (last_shot <= love.timer.getTime()) then
       -- player.incShootSize(0.1)
       player.shoot_bullet()
-
-      -- TODO addit somewhere else
-       local pSx = player.getXM()
-       local pSy = player.getY()
-       local pBSize = player.getBulletSize()*1.25
-       local bullet = bulletsClass.newBullet(pSx, pSy, pBSize)
-       -- TODO addit somewhere else
-
+      local pSx = player.getXM()
+      local pSy = player.getY()
+      local pBSize = player.getBulletSize()*1.25
+      local bullet = bulletsClass.newBullet(pSx, pSy, pBSize)
       bullet.setSX(player.getXM())
       table.insert(bullets_list, bullet)
     end
@@ -148,7 +144,7 @@ function love.update(dt)
   -- Update Bullets
   for i = #bullets_list,1,-1 do
     if bullets_list[i].getWaitTime() <= nowTime then
-      local status = bullets_list[i].update(posX1, posY1, posX2, posY2) -- TODO: test
+      local status = bullets_list[i].update(posX1, posY1, posX2, posY2) 
       if status == false then
         if bullets_list[i].isEnemyDead() then
           player.incKillCount()
