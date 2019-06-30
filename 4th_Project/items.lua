@@ -1,7 +1,7 @@
 local ITEMS = {}
 
 --                                                                     -- Items
-function ITEMS.newItem (sel, existence)
+function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   local width, height = love.graphics.getDimensions()
   local radius = 7.5
   local x = love.math.random(radius*4, width - 4*radius)
@@ -15,19 +15,23 @@ function ITEMS.newItem (sel, existence)
   local active = true
   local created = love.timer.getTime()
 
+  local posX1 = iniX1
+  local posY1 = iniY1
+  local posX2 = iniX2
+  local posY2 = iniY2
+
   local function gotcha (posX1, posY1, posX2, posY2)
     if posX1 < x and posX2 > x then
       if posY1 < y and posY2 > y then
         active = false
-
-        if mode == "inc_speed" then player.incSpeed(0.55)
-        elseif mode == "inc_fire_rate" then
-          if player.getFireRate() >= 0.1 then player.incFireRate(-0.1) end
-        elseif mode == "dec_fire_rate" then player.incFireRate(0.1)
-        elseif mode == "dec_speed" then player.incSpeed(-0.3) end
-
-        -- if mode == "inc_speed" then return 0.55
-
+        -- TODO
+        -- if mode == "inc_speed" then player.incSpeed(0.55)
+        -- elseif mode == "inc_fire_rate" then
+        --   if player.getFireRate() >= 0.1 then
+        --     player.incFireRate(-0.1)
+        --   end
+        -- elseif mode == "dec_fire_rate" then player.incFireRate(0.1)
+        -- elseif mode == "dec_speed" then player.incSpeed(-0.3) end
         return true
       end
       return false
@@ -39,15 +43,10 @@ function ITEMS.newItem (sel, existence)
     coroutine.yield()
   end
 
-  local function stay(posX1, posY1, posX2, posY2)
+  local function stay()
     while (created+existence) > love.timer.getTime() do
       -- make it blink
       blink = bit.band(1,blink+1) -- bitwise: 1 & blink+1
-      local posX1 = player.getX()
-      local posY1 = player.getY()
-      local posX2 = player.getXR()
-      local posY2 = player.getYL()
-      -- Check if player caught item
       if gotcha(posX1, posY1, posX2, posY2) then
         active = false
         break
@@ -56,8 +55,8 @@ function ITEMS.newItem (sel, existence)
     end
   end
 
-  local function exists (posX1, posY1, posX2, posY2)
-    local wrapping = coroutine.create(stay(posX1, posY1, posX2, posY2))
+  local function exists ()
+    local wrapping = coroutine.create(stay)
     return function ()
       return coroutine.resume(wrapping)
     end
@@ -66,6 +65,12 @@ function ITEMS.newItem (sel, existence)
   return {
     update = exists(),
     getInactiveTime = function () return inactiveTime end,
+
+    setX1 = function (pos) posX1 = pos end,
+    setY1 = function (pos) posY1 = pos end,
+    setX2 = function (pos) posX2 = pos end,
+    setY2 = function (pos) posY2 = pos end,
+
     draw = function ()
       if active then
         if mode == "inc_speed" then
@@ -83,21 +88,29 @@ function ITEMS.newItem (sel, existence)
 end
 
 --                                                       -- Item Generator List
-function ITEMS.newItemGenerator ()
+function ITEMS.newItemGenerator (iniX1, iniY1, iniX2, iniY2)
   local lst = {}
-  local item_respawn = love.math.random(6,8)
+  -- local item_respawn = love.math.random(6,8) -- TODO
+  local item_respawn = love.math.random(2,3)
   local await_time = love.timer.getTime() + item_respawn -- game starts without items
+
+  local posX1 = iniX1
+  local posY1 = iniY1
+  local posX2 = iniX2
+  local posY2 = iniY2
 
   local wait = function (seg)
     await_time = love.timer.getTime() + seg
-    item_respawn = love.math.random(4,20)
+    -- item_respawn = love.math.random(4,20) -- TODO
+    item_respawn = love.math.random(4,7)
+
     coroutine.yield()
   end
   local function generate_item()
     while true do
       local sel = love.math.random(1,4)
       local duration = love.math.random(5,15) -- time item will exists
-      table.insert(lst, ENEMIES.newItem(sel, duration))
+      table.insert(lst, ITEMS.newItem(sel, duration, posX1, posY1, posX2, posY2))
       wait(item_respawn)
     end
   end
@@ -110,6 +123,12 @@ function ITEMS.newItemGenerator ()
 
   return {
     update = startUpdate(),
+
+    setX1 = function (pos) posX1 = pos end,
+    setY1 = function (pos) posY1 = pos end,
+    setX2 = function (pos) posX2 = pos end,
+    setY2 = function (pos) posY2 = pos end,
+
     getWaitTime = function () return await_time end,
     getItemsList = function () return lst end,
     removeItem = function (i) table.remove(lst,i) end,
