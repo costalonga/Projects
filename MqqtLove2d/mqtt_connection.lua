@@ -4,6 +4,7 @@ local sw1 = 1
 local sw2 = 2
 
 local m
+local connected = false
 -- local CHANNEL1 = "1421229"
 local CHANNEL1 = "1421229/1"
 local CHANNEL2 = "1421229/2"
@@ -20,7 +21,6 @@ gpio.mode(sw2,gpio.INT,gpio.PULLUP)
 
 
 function startMqttClientConnection()
-  local clientID = "blip"
   -- m = mqtt.Client("blip", 120)
   m = mqtt.Client(clientID, 120)
 
@@ -67,6 +67,7 @@ function startMqttClientConnection()
       -- fç chamada qdo inscrição ok:
       m:subscribe(CHANNEL2, 0,
           function (client)
+              connected = true
               print("subscribed to channel /2")
           end,
           --fç chamada em caso de falha:
@@ -88,6 +89,7 @@ function startMqttClientConnection()
                 end
               end
               if data == 'a' then
+                -- m:publish("1421229/2", "butbut", 0, 1)
                 if(led2State == gpio.LOW) then
                     gpio.write(led2, gpio.HIGH)
                     led2State = gpio.HIGH
@@ -107,6 +109,14 @@ function startMqttClientConnection()
   )
 end
 
+function send_data()
+  if connected then
+    -- m:publish()
+    print("\n\tSending game data!\n")
+    -- m:publish("1421229/2", "butbut", 0, 1)
+    m:publish("mcc", "butbut", 0, 1)
+  end
+end
 
 wificonf = {
   -- verificar ssid e senha
@@ -121,3 +131,8 @@ wificonf = {
 
 wifi.setmode(wifi.STATION)
 wifi.sta.config(wificonf)
+
+owm_timer = tmr.create() --15min
+--owm_timer:register(60000*15, tmr.ALARM_AUTO, get_weather)
+owm_timer:register(3000, tmr.ALARM_AUTO, send_data) -- 3s
+owm_timer:start()

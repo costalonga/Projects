@@ -2,7 +2,7 @@ local mqtt = require("mqtt_library")
 
 local CHANNEL1 = "1421229/1"
 local CHANNEL2 = "1421229/2"
--- local CHANNEL3 = "mcc"
+local CHANNEL3 = "mcc"
 -- local CHANNEL1 = "1421229"
 -- local CHANNEL2 = "1421229"
 
@@ -15,6 +15,12 @@ function mqttcb(topic, message)
    if topic == CHANNEL2 and message == "but2" then
       controle2 = not controle2
    end
+
+   if topic == CHANNEL3 and message == "butbut" then
+      controle3 = not controle3
+   end
+
+
 end
 
 function love.keypressed(key)
@@ -39,8 +45,12 @@ end
 function love.load()
   controle1 = false
   controle2 = false
+  controle3 = false
   mqtt_client = mqtt.client.create("85.119.83.194", 1883, mqttcb)
-  mqtt_client:connect("cliente love 1")
+
+  -- local clientID = "blip"
+  local clientID = "player"
+  mqtt_client:connect(clientID)
   mqtt_client:subscribe({CHANNEL1, CHANNEL2, CHANNEL3})
   -- mqtt_client:subscribe({CHANNEL1})
 end
@@ -51,7 +61,11 @@ function love.draw()
    end
 
    if controle2 then
-     love.graphics.rectangle("fill", 300, 300, 150, 200)
+     love.graphics.rectangle("fill", 300, 400, 150, 200)
+   end
+
+   if controle3 then
+     love.graphics.rectangle("fill", 500, 170, 150, 200)
    end
 end
 
