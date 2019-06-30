@@ -89,7 +89,6 @@ end
 
 --                                                                                LOVE UPDATE
 function love.update(dt)
-
   local nowTime = love.timer.getTime()
 
   -- Update Player

@@ -2,11 +2,6 @@ local BULLET = {}
 
 --                                                                    -- Bullet
 function BULLET.newBullet (pSx, pSy, pBulletSize)
-   -- TODO addit somewhere else
-  -- local sx = player.getXM()
-  -- local sy = player.getY()
-  -- local size = player.getBulletSize()*1.25
-
   local sx = pSx
   local sy = pSy
   local size = pBulletSize*1.25
