@@ -3,7 +3,7 @@ local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
 
-
+local env = require("envFile")
 
 --                                                                                Keypressed
 function love.keypressed(key)
@@ -25,6 +25,8 @@ end
 
 --                                                                                LOVE LOAD
 function love.load()
+
+  print(env.getAPIKey()) -- TODO
 
   -- TODO USE MQTT CHANNELS TO CHANGE HERE
   game_modes = {"BATTLING", "NAVIGATING", "LOADING"}

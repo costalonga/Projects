@@ -3,6 +3,11 @@ local led2 = 6
 local sw1 = 1
 local sw2 = 2
 
+-- TODO ADD env file organize!!
+local env = require("envFile")
+print("\t\t\n" .. env.getAPIKey())
+local OWM_API_endpoint = "http://api.openweathermap.org/data/2.5/weather?id=3451190&APPID=" .. API_KEY .. "&units=metric"
+
 local m
 local connected = false
 -- local CHANNEL1 = "1421229"
@@ -31,27 +36,6 @@ function startMqttClientConnection()
      -- callback em caso de sucesso
     function(client)
       print("connected")
-
-      gpio.mode(led2, gpio.OUTPUT)
-      gpio.write(led2, gpio.LOW)
-      gpio.mode(sw2,gpio.INT,gpio.PULLUP)
-
-      gpio.mode(led1, gpio.OUTPUT)
-      gpio.write(led1, gpio.LOW)
-      gpio.mode(sw1,gpio.INT,gpio.PULLUP)
-
-      function pressedButton1()
-          print("Apertei botao 1 \tchn:" .. CHANNEL1)
-          -- m:publish("1421229/1", "but1", 0, 1)
-          m:publish("1421229/2", "but1", 0, 1)
-      end
-      function pressedButton2()
-          print("Apertei botao 2 \tchn:" .. CHANNEL2)
-
-          m:publish("1421229/2", "but2", 0, 1)
-      end
-      gpio.trig(sw1, "down", pressedButton1)
-      gpio.trig(sw2, "down", pressedButton2)
 
       -- fç chamada qdo inscrição ok:
       m:subscribe(CHANNEL1, 0,
@@ -109,6 +93,7 @@ function startMqttClientConnection()
   )
 end
 
+--                          CHANNEL 3
 function send_data()
   if connected then
     -- m:publish()
@@ -117,6 +102,53 @@ function send_data()
     m:publish("mcc", "butbut", 0, 1)
   end
 end
+
+
+gpio.mode(led2, gpio.OUTPUT)
+gpio.write(led2, gpio.LOW)
+gpio.mode(sw2,gpio.INT,gpio.PULLUP)
+
+gpio.mode(led1, gpio.OUTPUT)
+gpio.write(led1, gpio.LOW)
+gpio.mode(sw1,gpio.INT,gpio.PULLUP)
+
+function pressedButton1()
+    print("Apertei botao 1 \tchn:" .. CHANNEL1)
+    -- m:publish("1421229/1", "but1", 0, 1)
+    m:publish("1421229/2", "but1", 0, 1)
+end
+function pressedButton2()
+    print("Apertei botao 2 \tchn:" .. CHANNEL2)
+    m:publish("1421229/2", "but2", 0, 1)
+end
+gpio.trig(sw1, "down", pressedButton1)
+gpio.trig(sw2, "down", pressedButton2)
+
+
+-- function get_weather()
+--   print("Requestin Weather Status")
+--   http.get(OWM_API_endpoint, nil, function(code, data)
+--     if (code < 0) then
+--         print("HTTP request failed")
+--     else
+--         print("Data: \n", data)
+--         local resp = sjson.decode(data)
+--         local weather_icon = resp["weather"][1]["icon"]
+--         local weather_index = string.sub(weather_icon, 1, 2)
+--         weather_status = icons[weather_index]
+--
+--         if first_request == 0 then
+--           rtctime.set(resp.dt + resp.timezone)
+--
+--           rtc_timer = tmr.create() -- 20 sec
+--           rtc_timer:register(20000, tmr.ALARM_AUTO, exibe_time)
+--           rtc_timer:start()
+--           first_request = 1
+--         end
+--     end
+--   end)
+-- end
+
 
 wificonf = {
   -- verificar ssid e senha

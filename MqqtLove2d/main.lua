@@ -34,6 +34,8 @@ end
 
 --                                        lOVE LOAD
 function love.load()
+
+
   controle1 = false
   controle2 = false
   controle3 = false
