@@ -1,42 +1,45 @@
 local mqtt = require("mqtt_library")
 
-local CHANNEL1 = "mc1"
--- local CHANNEL2 = "mc2"
+local CHANNEL1 = "1421229/1"
+local CHANNEL2 = "1421229/2"
+-- local CHANNEL1 = "1421229"
+-- local CHANNEL2 = "1421229"
 
 function mqttcb(topic, message)
    print("Received from topic: " .. topic .. " - message:" .. message)
-   if topic == "mc1" then
+   if topic == CHANNEL1 and message == "but1" then
       controle1 = not controle1
-   elseif topic == "mc2" then
+   end
+   if topic == CHANNEL2 and message == "but2" then
       controle2 = not controle2
    end
 end
 
 function love.keypressed(key)
-  -- Channel 1
+  local chan
   if key == 'a' then
-    mqtt_client:publish(CHANNEL1, "a")
-  end
-  if key == 's' then
-    mqtt_client:publish(CHANNEL1, "s")
+    mqtt_client:publish(CHANNEL1, 'a')
+--    chan = CHANNEL1 -- Channel 1 VERDE
+  elseif key == 's' then
+    mqtt_client:publish(CHANNEL2, 's')
+--    chan = CHANNEL2  -- Channel 2 RED
   end
 
-  -- -- Channel 2
-  -- if key == 'q' then
-  --   mqtt_client:publish(CHANNEL2, "w")
-  -- end
-  -- if key == 'w' then
-  --   mqtt_client:publish(CHANNEL2, "q")
-  -- end
-
+--  local ack = mqtt_client:publish(chan, key)
+--  if ack == false then
+--    print("FAILED!! Message: " .. key .. " wasnt send to topic: " .. chan)
+--  elseif ack == true then
+--    print("SUCESS!! Message: " .. key .. " was sent to topic: " .. chan)
+--  end
 end
 
 function love.load()
   controle1 = false
+  controle2 = false
   mqtt_client = mqtt.client.create("85.119.83.194", 1883, mqttcb)
   mqtt_client:connect("cliente love 1")
-  -- mqtt_client:subscribe({CHANNEL1, CHANNEL2})
-  mqtt_client:subscribe({CHANNEL1})
+  mqtt_client:subscribe({CHANNEL1, CHANNEL2})
+  -- mqtt_client:subscribe({CHANNEL1})
 end
 
 function love.draw()
