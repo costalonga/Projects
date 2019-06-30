@@ -3,10 +3,20 @@ local led2 = 6
 local sw1 = 1
 local sw2 = 2
 
--- TODO ADD env file organize!!
+-- TODO organize!!
 local env = require("envFile")
-print("\t\t\n" .. env.getAPIKey())
-local OWM_API_endpoint = "http://api.openweathermap.org/data/2.5/weather?id=3451190&APPID=" .. API_KEY .. "&units=metric"
+local OWM_API_endpoint = "http://api.openweathermap.org/data/2.5/weather?id=3451190&APPID=" .. env.getAPIKey() .. "&units=metric"
+local icons = {
+  ["01"] = 1, -- clear sky
+  ["02"] = 2, -- few clouds
+  ["03"] = 3, -- scattered clouds
+  ["04"] = 4, -- broken clouds
+  ["09"] = 9, -- shower rain
+  ["10"] = 10, -- rain
+  ["11"] = 11, -- thunderstorm
+}
+-- TODO organize!!
+
 
 local m
 local connected = false
@@ -94,12 +104,14 @@ function startMqttClientConnection()
 end
 
 --                          CHANNEL 3
+-- function send_data(message)
 function send_data()
   if connected then
-    -- m:publish()
     print("\n\tSending game data!\n")
-    -- m:publish("1421229/2", "butbut", 0, 1)
-    m:publish("mcc", "butbut", 0, 1)
+    -- local message = "butbut"
+    local message = get_weather()
+    print("\t\tGet weather return value: " .. message)
+    if #message ~= 0 then m:publish("mcc", message, 0, 1) end
   end
 end
 
@@ -125,29 +137,33 @@ gpio.trig(sw1, "down", pressedButton1)
 gpio.trig(sw2, "down", pressedButton2)
 
 
--- function get_weather()
---   print("Requestin Weather Status")
---   http.get(OWM_API_endpoint, nil, function(code, data)
---     if (code < 0) then
---         print("HTTP request failed")
---     else
---         print("Data: \n", data)
---         local resp = sjson.decode(data)
---         local weather_icon = resp["weather"][1]["icon"]
---         local weather_index = string.sub(weather_icon, 1, 2)
---         weather_status = icons[weather_index]
---
---         if first_request == 0 then
---           rtctime.set(resp.dt + resp.timezone)
---
---           rtc_timer = tmr.create() -- 20 sec
---           rtc_timer:register(20000, tmr.ALARM_AUTO, exibe_time)
---           rtc_timer:start()
---           first_request = 1
---         end
---     end
---   end)
--- end
+function get_weather()
+  print("Requestin Weather Status")
+  local r = ""
+  http.get(OWM_API_endpoint, nil, function(code, data)
+    if (code < 0) then
+        print("HTTP request failed")
+    else
+        print("Data: \n", data)
+        r = sjson.decode(data)
+
+        -- local resp = sjson.decode(data)
+        -- local weather_icon = resp["weather"][1]["icon"]
+        -- local weather_index = string.sub(weather_icon, 1, 2)
+        -- weather_status = icons[weather_index]
+
+        -- if first_request == 0 then
+        --   rtctime.set(resp.dt + resp.timezone)
+        --
+        --   rtc_timer = tmr.create() -- 20 sec
+        --   rtc_timer:register(20000, tmr.ALARM_AUTO, exibe_time)
+        --   rtc_timer:start()
+        --   first_request = 1
+        -- end
+    end
+  end)
+  return r
+end
 
 
 wificonf = {
@@ -166,5 +182,5 @@ wifi.sta.config(wificonf)
 
 owm_timer = tmr.create() --15min
 --owm_timer:register(60000*15, tmr.ALARM_AUTO, get_weather)
-owm_timer:register(10000, tmr.ALARM_AUTO, send_data) -- 10s
+owm_timer:register(5000, tmr.ALARM_AUTO, send_data) -- 10s
 owm_timer:start()

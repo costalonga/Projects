@@ -9,7 +9,7 @@ local CHANNEL3 = "mcc"
 -- local CHANNEL2 = "1421229"
 
 function mqttcb(topic, message)
-   print("Received from topic: " .. topic .. " - message:" .. message)
+   -- print("Received from topic: " .. topic .. " - message:" .. message)
    -- if topic == CHANNEL1 and message == "but1" then
    if topic == CHANNEL2 and message == "but1" then
       controle1 = not controle1
@@ -18,7 +18,13 @@ function mqttcb(topic, message)
       controle2 = not controle2
    end
 
-   if topic == CHANNEL3 and message == "butbut" then
+   -- TODO delete
+   -- if topic == CHANNEL3 and message == "butbut" then
+   --    controle3 = not controle3
+   -- end
+   if topic == CHANNEL3 then
+      -- message == "butbut"
+      print("RECEIVED FROM CHANNEL 3: \n\t" .. message)
       controle3 = not controle3
    end
 
