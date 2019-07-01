@@ -93,6 +93,8 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
 
     draw = function ()
       if active then
+        -- love.graphics.setColor(0, 245, 10)
+
         if mode == "inc_speed" then
           love.graphics.arc(blink_mode[blink+1], x, y, radius, 0, math.pi*2)
         elseif mode == "inc_fire_rate" then

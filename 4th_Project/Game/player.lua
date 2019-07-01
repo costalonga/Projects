@@ -95,7 +95,6 @@ function PLAYER.newPlayer ()
       elseif effType == "dec_speed" then player.incSpeed(effVal) end
     end,
 
-
     draw = function ()
       love.graphics.rectangle("line", x, y, rect_width, rect_height)
       -- love.graphics.draw(shipImg, x+(rect_width/4), y, 0, 0.5, 0.5, rect_width/2, 0)

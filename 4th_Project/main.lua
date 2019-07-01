@@ -4,7 +4,7 @@
 -- -- light.clearLights()
 
 
-local enemisClass = require("Game/bullets")
+local enemiesClass = require("Game/enemies")
 local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
@@ -32,6 +32,8 @@ end
 --                                                                                LOVE LOAD
 function love.load()
 
+  -- TODO TESTE MODE
+  switch = false
 
   -- TODO USE MQTT CHANNELS TO CHANGE HERE
   game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
@@ -62,11 +64,45 @@ function love.load()
     table.insert(listabls, enemiesClass.newBlip(10))
   end
   enemy_fire = enemiesClass.newAttackList(listabls)
+
+  print(love.graphics.getColor( ))
+
 end
 
 
 --                                                                                 LOVE DRAW
 function love.draw()
+
+  local alpha = 1
+  local blip_color = 1
+  local rect_width = bg.width
+  local rect_height = bg.height
+  local x = player.getX()
+  local y = player.getY()
+
+  -- -- TODO SET MODE
+  if switch then
+    alpha = alpha/2
+    rect_width = 48
+    rect_height = 48
+    blip_color = 1
+    -- print("IN SWITCH")
+    -- love.graphics.setColor(5, 0, -245, 1)
+    -- love.graphics.setColor(0, 250, 0, 0.25)
+  -- else
+    -- love.graphics.setColor(1, 1, 1, 1)
+  end
+
+  -- TODO : Adjust so this variable are initialize by Player Position and variate according to the Light from nodeMCU
+  love.graphics.stencil(function ()
+                          love.graphics.rectangle("fill", x - 15*rect_width/8,
+                                                          y - 5*rect_height,
+                                                          5*rect_width,
+                                                          8*rect_height)
+                        end,
+                        "replace", 1, false)
+  love.graphics.setStencilTest("greater", 0)
+  -- love.graphics.circle("fill", 30, 30, 20)
 
   love.graphics.draw(bg.image, bg.x1, bg.y1)
   love.graphics.draw(bg.image, bg.x2, bg.y2)
@@ -75,21 +111,33 @@ function love.draw()
   love.graphics.print("hits to kill: " ..player.getLV(), 20, 540)
   love.graphics.print('kills: '.. player.getKillCount(), 20, 520)
 
+  love.graphics.setColor(1, 1, 1, 1)
   player.draw()
+
+  love.graphics.setColor(1, 1, blip_color, aplha)
   for i = 1,#listabls do
     listabls[i].draw()
   end
+
+  -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
+  love.graphics.setColor(1, 1, 1, 1)
   for i = 1,#bullets_list do
     bullets_list[i].draw()
   end
+
+  love.graphics.setColor(0, 250, 0, alpha)
   local attack_lst = enemy_fire.getEnemyFireList()
   for i=1,#attack_lst do
     attack_lst[i].draw()
   end
+
+  love.graphics.setColor(250, 0, 0, 1)
   local items_lst = item_generator.getItemsList()
   for i=1,#items_lst do
     items_lst[i].draw()
   end
+
+  love.graphics.setColor(1, 1, 1, 1)
 end
 
 
@@ -141,6 +189,9 @@ function love.update(dt)
       end
     end
     if #listabls == 0 then
+
+      -- TODO TEST MODE
+      switch = not switch
 
       player.incLV()
       local level = player.getLV()
