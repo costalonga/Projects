@@ -1,4 +1,10 @@
-local enemiesClass = require("Game/enemies")
+-- -- TODO TESTING
+-- local light = require("lights")
+-- -- light.addLight(x, y, size, r, g, b)
+-- -- light.clearLights()
+
+
+local enemisClass = require("Game/bullets")
 local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
@@ -26,7 +32,6 @@ end
 --                                                                                LOVE LOAD
 function love.load()
 
-  print(env.getAPIKey()) -- TODO
 
   -- TODO USE MQTT CHANNELS TO CHANGE HERE
   game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
