@@ -131,7 +131,7 @@ function ITEMS.newItemGenerator (iniX1, iniY1, iniX2, iniY2)
   local function generate_item()
     while true do
       local sel = love.math.random(1,4)
-      local duration = love.math.random(5,15) -- time item will exists
+      local duration = love.math.random(10,15) -- time item will exists
       table.insert(lst, ITEMS.newItem(sel, duration, posX1, posY1, posX2, posY2))
       wait(item_respawn)
     end

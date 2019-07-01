@@ -1,9 +1,3 @@
--- -- TODO TESTING
--- local light = require("lights")
--- -- light.addLight(x, y, size, r, g, b)
--- -- light.clearLights()
-
-
 local enemiesClass = require("Game/enemies")
 local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
@@ -29,6 +23,22 @@ function love.keypressed(key)
 end
 
 
+function clear_all()
+  for i = #bullets_list,1,-1 do
+    table.remove(bullets_list, i)
+  end
+  local attack_lst = enemy_fire.getEnemyFireList()
+
+  for i=#attack_lst,1,-1 do
+    enemy_fire.removeEnemyFireList(i)
+  end
+
+  local items_lst = item_generator.getItemsList()
+  for i = #items_lst,1,-1 do
+    item_generator.removeItem(i)
+  end
+end
+
 --                                                                                LOVE LOAD
 function love.load()
 
@@ -38,6 +48,13 @@ function love.load()
   -- TODO USE MQTT CHANNELS TO CHANGE HERE
   game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
   curr_mode = "BATTLING"
+  local curr_directory = "Game/"
+
+  -- TODO MAKE BACKGROUND NON GLOBAL
+  bg_img_lst = {love.graphics.newImage(curr_directory .. "Images/bg.png"),
+    love.graphics.newImage(curr_directory .. "Images/bg2.png"),
+    love.graphics.newImage(curr_directory .. "Images/bg3.png")}
+  counter = 1 -- TODO MAKE COUNTER NON GLOBARL
 
   love.window.setTitle("Square Invaders")
   font =  {
@@ -46,7 +63,7 @@ function love.load()
   }
 
   --  Load Images
-  bg = {image=love.graphics.newImage("Game/Images/bg.png"), x1=0, y1=0, x2=0, y2=0, width=0, height=0}
+  bg = {image=bg_img_lst[counter], x1=0, y1=0, x2=0, y2=0, width=0, height=0}
   bg.width = bg.image:getWidth()
   bg.height = bg.image:getHeight()
 
@@ -82,15 +99,17 @@ function love.draw()
 
   -- -- TODO SET MODE
   if switch then
-    alpha = alpha/2
-    rect_width = 48
-    rect_height = 48
-    blip_color = 1
-    -- print("IN SWITCH")
-    -- love.graphics.setColor(5, 0, -245, 1)
-    -- love.graphics.setColor(0, 250, 0, 0.25)
-  -- else
-    -- love.graphics.setColor(1, 1, 1, 1)
+    if curr_mode == "BATTLING" then
+      alpha = alpha/2
+      rect_width = 48
+      rect_height = 48
+      blip_color = 1
+      -- print("IN SWITCH")
+      -- love.graphics.setColor(5, 0, -245, 1)
+      -- love.graphics.setColor(0, 250, 0, 0.25)
+    -- else
+      -- love.graphics.setColor(1, 1, 1, 1)
+    end
   end
 
   -- TODO : Adjust so this variable are initialize by Player Position and variate according to the Light from nodeMCU
@@ -114,124 +133,139 @@ function love.draw()
   love.graphics.setColor(1, 1, 1, 1)
   player.draw()
 
-  love.graphics.setColor(1, 1, blip_color, aplha)
-  for i = 1,#listabls do
-    listabls[i].draw()
-  end
+  if curr_mode == "BATTLING" then
+    love.graphics.setColor(1, 1, blip_color, aplha)
+    for i = 1,#listabls do
+      listabls[i].draw()
+    end
 
-  -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
-  love.graphics.setColor(1, 1, 1, 1)
-  for i = 1,#bullets_list do
-    bullets_list[i].draw()
-  end
+    -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
+    love.graphics.setColor(1, 1, 1, 1)
+    for i = 1,#bullets_list do
+      bullets_list[i].draw()
+    end
 
-  love.graphics.setColor(0, 250, 0, alpha)
-  local attack_lst = enemy_fire.getEnemyFireList()
-  for i=1,#attack_lst do
-    attack_lst[i].draw()
-  end
+    love.graphics.setColor(0, 250, 0, alpha)
+    local attack_lst = enemy_fire.getEnemyFireList()
+    for i=1,#attack_lst do
+      attack_lst[i].draw()
+    end
 
-  love.graphics.setColor(250, 0, 0, 1)
-  local items_lst = item_generator.getItemsList()
-  for i=1,#items_lst do
-    items_lst[i].draw()
-  end
+    love.graphics.setColor(250, 0, 0, 1)
+    local items_lst = item_generator.getItemsList()
+    for i=1,#items_lst do
+      items_lst[i].draw()
+    end
 
-  love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setColor(1, 1, 1, 1)
+  end
 end
 
 
 --                                                                                LOVE UPDATE
 function love.update(dt)
 
-    if curr_mode == "BATTLING" then
-
-    local nowTime = love.timer.getTime()
     -- Update Player
     player.update(dt)
 
-    -- Update Items
-    if item_generator.getWaitTime() <= nowTime then
-      -- time between items creation
-      -- Initialize with Player Position to know if item was caught
-      item_generator.setX1(player.getX())
-      item_generator.setX2(player.getXR())
-      item_generator.setY1(player.getY())
-      item_generator.setY2(player.getYL())
-      item_generator.update()
-    end
-    local items_lst = item_generator.getItemsList()
-    for i = #items_lst,1,-1 do
-      if items_lst[i].getInactiveTime() <= nowTime then
-        -- Update Player Position to know if item was caught
-        items_lst[i].setX1(player.getX())
-        items_lst[i].setX2(player.getXR())
-        items_lst[i].setY1(player.getY())
-        items_lst[i].setY2(player.getYL())
-        local status = items_lst[i].update()
+    if curr_mode == "BATTLING" then
+      local nowTime = love.timer.getTime()
 
-        if status == false then
-          if items_lst[i].CaughtIt() then
-            local effect_type = items_lst[i].getEffectType()
-            local effect_value = items_lst[i].getEffectValue()
-            player.applyEffect(effect_type, effect_value)
+      -- Update Items
+      if item_generator.getWaitTime() <= nowTime then
+        -- time between items creation
+        -- Initialize with Player Position to know if item was caught
+        item_generator.setX1(player.getX())
+        item_generator.setX2(player.getXR())
+        item_generator.setY1(player.getY())
+        item_generator.setY2(player.getYL())
+        item_generator.update()
+      end
+      local items_lst = item_generator.getItemsList()
+      for i = #items_lst,1,-1 do
+        if items_lst[i].getInactiveTime() <= nowTime then
+          -- Update Player Position to know if item was caught
+          items_lst[i].setX1(player.getX())
+          items_lst[i].setX2(player.getXR())
+          items_lst[i].setY1(player.getY())
+          items_lst[i].setY2(player.getYL())
+          local status = items_lst[i].update()
+
+          if status == false then
+            if items_lst[i].CaughtIt() then
+              local effect_type = items_lst[i].getEffectType()
+              local effect_value = items_lst[i].getEffectValue()
+              player.applyEffect(effect_type, effect_value)
+            end
+            print("Effect type: " .. items_lst[i].getEffectType())
+            print("Effect value: " .. items_lst[i].getEffectValue())
+            item_generator.removeItem(i)
           end
-          print("Effect type: " .. items_lst[i].getEffectType())
-          print("Effect value: " .. items_lst[i].getEffectValue())
-          item_generator.removeItem(i)
         end
       end
-    end
 
-    for i = 1,#listabls do
-      if listabls[i].getInactiveTime() <= nowTime then
-        listabls[i].update()
+      for i = 1,#listabls do
+        if listabls[i].getInactiveTime() <= nowTime then
+          listabls[i].update()
+        end
       end
-    end
-    if #listabls == 0 then
+      if #listabls == 0 then
 
-      -- TODO TEST MODE
-      switch = not switch
+        -- TODO TEST MODE
+        switch = not switch
 
-      player.incLV()
-      local level = player.getLV()
-      for i=1, 5*level do
-        listabls[i] = enemiesClass.newBlip(level * 10 )
+        player.incLV()
+        local level = player.getLV()
+        for i=1, 5*level do
+          listabls[i] = enemiesClass.newBlip(level * 10 )
+        end
+
+        -- TODO TEST MODE
+        curr_mode = "NAVIGATING"
+        clear_all()
+        player.setMode(curr_mode)
       end
-    end
 
-    -- Update Bullets
-    for i = #bullets_list,1,-1 do
-      if bullets_list[i].getWaitTime() <= nowTime then
-        local status = bullets_list[i].update(posX1, posY1, posX2, posY2)
-        if status == false then
-          if bullets_list[i].isEnemyDead() then
-            player.incKillCount()
+      -- Update Bullets
+      for i = #bullets_list,1,-1 do
+        if bullets_list[i].getWaitTime() <= nowTime then
+          local status = bullets_list[i].update(posX1, posY1, posX2, posY2)
+          if status == false then
+            if bullets_list[i].isEnemyDead() then
+              player.incKillCount()
+            end
+            table.remove(bullets_list, i)
           end
-          table.remove(bullets_list, i)
         end
       end
-    end
 
-    -- Update Enemy's attack, using two coroutines! One for shot speed and other as timer
-    if enemy_fire.getWaitTime() <= nowTime then
-      -- Wait time between blips shots
-      enemy_fire.update()
-    end
-    local attack_lst = enemy_fire.getEnemyFireList()
-    -- Blips bullet speed
-    for i=#attack_lst,1,-1 do
-      if attack_lst[i].getWaitTime() <= nowTime then
-        local status = attack_lst[i].update()
-        if status == false then
-          enemy_fire.removeEnemyFireList(i)
+      -- Update Enemy's attack, using two coroutines! One for shot speed and other as timer
+      if enemy_fire.getWaitTime() <= nowTime then
+        -- Wait time between blips shots
+        enemy_fire.update()
+      end
+      local attack_lst = enemy_fire.getEnemyFireList()
+      -- Blips bullet speed
+      for i=#attack_lst,1,-1 do
+        if attack_lst[i].getWaitTime() <= nowTime then
+          local status = attack_lst[i].update()
+          if status == false then
+            enemy_fire.removeEnemyFireList(i)
+          end
         end
       end
-    end
 
   -- TODO
-  -- elseif curr_mode == "NAVIGATING" then
-  --
+  elseif curr_mode == "NAVIGATING" then
+    if curr_mode ~= player.getMode() then
+      counter = counter + 1
+      if counter == 4 then counter = 1 end
+      bg = {image=bg_img_lst[counter], x1=0, y1=0, x2=0, y2=0, width=0, height=0}
+      bg.width = bg.image:getWidth()
+      bg.height = bg.image:getHeight()
+      curr_mode = player.getMode()
+    end
+
   -- elseif curr_mode == "LOADING" then
 
   end

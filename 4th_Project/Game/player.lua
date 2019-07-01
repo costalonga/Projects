@@ -7,13 +7,15 @@ function PLAYER.newPlayer ()
     love.graphics.newImage(curr_directory .. "Images/r.png")}
   local shipImg = ship_img_lst[1]
   local width, height = love.graphics.getDimensions( )
-  local x = 200
-  local y = 200
+  local x = width/2
+  local y = height/2
   local rect_height = shipImg:getHeight()*3/4
   local rect_width = shipImg:getWidth()*3/4
 
   local modes = {"BATTLING", "NAVIGATING"}
   local curr_mode = modes[1]
+  local directions = {"left", "right", "up", "down"}
+  local last_direction = ""
 
   -- TODO GO BACK
   -- local speed = 2.5
@@ -54,15 +56,43 @@ function PLAYER.newPlayer ()
 
     incX = function (nx)
       x = x + nx
-      if (x + rect_width) > width then
-        x = 0 -- player switch sides from right to left
-      elseif x < 0 then
-        x = width - rect_width -- player switch sides from left to right
+      if curr_mode == "BATTLING" then
+        if (x + rect_width) > width then
+          x = 0 -- player switch sides from right to left
+        elseif x < 0 then
+          x = width - rect_width -- player switch sides from left to right
+        end
+
+      elseif curr_mode == "NAVIGATING" then
+        if ((x + rect_width/2) > width) or ((x + rect_width/2) < 0) then
+          if (x + rect_width/2) > width then last_direction = "right"
+          else last_direction = "left" end
+
+          -- love.timer.sleep(0.1)
+          x = width/2
+          y = height/2
+          curr_mode = "BATTLING"
+        end
       end
     end,
+
     incY = function (ny)
-      if ((y + ny) >= 0) and ((y + ny) <= (height - rect_height)) then
-        y = y + ny -- player cant get out of the screen during battles
+      if curr_mode == "BATTLING" then
+        if ((y + ny) >= 0) and (((y + ny) + rect_height) <= height) then
+          y = y + ny -- player cant get out of the screen during battles
+        end
+
+      elseif curr_mode == "NAVIGATING" then
+        y = y + ny
+        if ((y + ny) < 0) or (((y + ny) - rect_height/2) > height) then
+          if (y + ny) < 0 then last_direction = "up"
+          else last_direction = "down" end
+
+          -- love.timer.sleep(0.1)
+          x = width/2
+          y = height/2
+          curr_mode = "BATTLING"
+        end
       end
     end,
 
@@ -81,6 +111,7 @@ function PLAYER.newPlayer ()
     getLV = function () return level end,
     incLV = function () level = level + 1 end,
 
+    getLastDir = function () return last_direction end,
     getMode = function () return curr_mode end,
     setMode = function (m) curr_mode = m end,
 
