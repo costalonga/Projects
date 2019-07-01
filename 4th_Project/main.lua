@@ -2,22 +2,25 @@ local enemiesClass = require("Game/enemies")
 local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
+local bossClass = require("Game/bosses")
 
 local env = require("envFile")
 
 --                                                                                Keypressed
 function love.keypressed(key)
   if key == 'a' then
-    local last_shot = player.getLastShot()
-    if (last_shot == 0) or (last_shot <= love.timer.getTime()) then
-      -- player.incShootSize(0.1)
-      player.shoot_bullet()
-      local pSx = player.getXM()
-      local pSy = player.getY()
-      local pBSize = player.getBulletSize()*1.25
-      local bullet = bulletsClass.newBullet(pSx, pSy, pBSize)
-      bullet.setSX(player.getXM())
-      table.insert(bullets_list, bullet)
+    if curr_mode == "BATTLING" then
+      local last_shot = player.getLastShot()
+      if (last_shot == 0) or (last_shot <= love.timer.getTime()) then
+        -- player.incShootSize(0.1)
+        player.shoot_bullet()
+        local pSx = player.getXM()
+        local pSy = player.getY()
+        local pBSize = player.getBulletSize()*1.25
+        local bullet = bulletsClass.newBullet(pSx, pSy, pBSize)
+        bullet.setSX(player.getXM())
+        table.insert(bullets_list, bullet)
+      end
     end
   end
 end
@@ -48,6 +51,8 @@ function love.load()
   -- TODO USE MQTT CHANNELS TO CHANGE HERE
   game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
   curr_mode = "BATTLING"
+  battle_modes = {"blips", "boss"}
+  curr_battle = battle_modes[1]
   local curr_directory = "Game/"
 
   -- TODO MAKE BACKGROUND NON GLOBAL
@@ -76,16 +81,17 @@ function love.load()
 
   item_generator = itemsClass.newItemGenerator(posX1, posY1, posX2, posY2)
   bullets_list = {}
+
   listabls = {}
   for i = 1, 5 do
     table.insert(listabls, enemiesClass.newBlip(10))
   end
   enemy_fire = enemiesClass.newAttackList(listabls)
 
-  print(love.graphics.getColor( ))
-
+  boss_lst = {}
+  -- table.insert(boss_lst, bossClass.newBoss())
+  boss_fire = bossClass.newAttackList(boss_lst)
 end
-
 
 --                                                                                 LOVE DRAW
 function love.draw()
@@ -134,9 +140,29 @@ function love.draw()
   player.draw()
 
   if curr_mode == "BATTLING" then
-    love.graphics.setColor(1, 1, blip_color, aplha)
-    for i = 1,#listabls do
-      listabls[i].draw()
+
+    if curr_battle == "blips" then
+      love.graphics.setColor(1, 1, blip_color, aplha)
+      for i = 1,#listabls do
+        listabls[i].draw()
+      end
+      love.graphics.setColor(0, 250, 0, alpha)
+      local attack_lst = enemy_fire.getEnemyFireList()
+      for i=1,#attack_lst do
+        attack_lst[i].draw()
+      end
+
+    elseif curr_battle == "boss" then
+      love.graphics.setColor(1, 1, blip_color, aplha)
+      for i = 1,#boss_lst do
+        boss_lst[i].draw()
+      end
+      love.graphics.setColor(0, 250, 0, alpha)
+      local attack_lst = boss_fire.getEnemyFireList()
+      for i=1,#attack_lst do
+        attack_lst[i].draw()
+      end
+
     end
 
     -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
@@ -145,11 +171,6 @@ function love.draw()
       bullets_list[i].draw()
     end
 
-    love.graphics.setColor(0, 250, 0, alpha)
-    local attack_lst = enemy_fire.getEnemyFireList()
-    for i=1,#attack_lst do
-      attack_lst[i].draw()
-    end
 
     love.graphics.setColor(250, 0, 0, 1)
     local items_lst = item_generator.getItemsList()
@@ -204,22 +225,56 @@ function love.update(dt)
         end
       end
 
-      for i = 1,#listabls do
-        if listabls[i].getInactiveTime() <= nowTime then
-          listabls[i].update()
+      -- Update Blips Movement!
+      if curr_battle == "blips" then
+        for i = 1,#listabls do
+          if listabls[i].getInactiveTime() <= nowTime then
+            listabls[i].update()
+          end
         end
       end
-      if #listabls == 0 then
 
+      -- Update Boss Movement!
+      if curr_battle == "boss" then
+        for i = 1,#boss_lst do
+          if boss_lst[i].getInactiveTime() <= nowTime then
+            boss_lst[i].update()
+          end
+        end
+      end
+
+      -- Check if player survived level
+      if curr_battle == "blips" and #listabls == 0 then
+        -- TODO :                                                                       HERE NEW LEVEL
         -- TODO TEST MODE
         switch = not switch
-
         player.incLV()
         local level = player.getLV()
+        if level==3 or level==5 or level==7 or level==11 or level==13 or level==17 then
+          curr_battle = "boss"
+          print("\n\t\tCREATING BOSS\n")
+          table.insert(boss_lst, bossClass.newBoss(level * 10))
+          print(#boss_lst, boss_lst)
+        else
+          for i=1, 5*level do
+            listabls[i] = enemiesClass.newBlip(level * 10 )
+          end
+        end
+        -- TODO TEST MODE
+        curr_mode = "NAVIGATING"
+        clear_all()
+        player.setMode(curr_mode)
+      end
+
+      -- Check if player won boss battle
+      if curr_battle == "boss" and #boss_lst == 0 then
+        switch = not switch
+        player.incLV()
+        local level = player.getLV()
+        curr_battle = "blips"
         for i=1, 5*level do
           listabls[i] = enemiesClass.newBlip(level * 10 )
         end
-
         -- TODO TEST MODE
         curr_mode = "NAVIGATING"
         clear_all()
@@ -240,17 +295,37 @@ function love.update(dt)
       end
 
       -- Update Enemy's attack, using two coroutines! One for shot speed and other as timer
-      if enemy_fire.getWaitTime() <= nowTime then
-        -- Wait time between blips shots
-        enemy_fire.update()
+      if curr_battle == "blips" then
+        if enemy_fire.getWaitTime() <= nowTime then
+          -- Wait time between blips shots
+          enemy_fire.update()
+        end
+        local attack_lst = enemy_fire.getEnemyFireList()
+        -- Blips bullet speed
+        for i=#attack_lst,1,-1 do
+          if attack_lst[i].getWaitTime() <= nowTime then
+            local status = attack_lst[i].update()
+            if status == false then
+              enemy_fire.removeEnemyFireList(i)
+            end
+          end
+        end
       end
-      local attack_lst = enemy_fire.getEnemyFireList()
-      -- Blips bullet speed
-      for i=#attack_lst,1,-1 do
-        if attack_lst[i].getWaitTime() <= nowTime then
-          local status = attack_lst[i].update()
-          if status == false then
-            enemy_fire.removeEnemyFireList(i)
+
+      -- Update Bosses's attack, using two coroutines! One for shot speed and other as timer
+      if curr_battle == "boss" then
+        if boss_fire.getWaitTime() <= nowTime then
+          -- Wait time between blips shots
+          boss_fire.update()
+        end
+        local boss_attack_lst = boss_fire.getEnemyFireList()
+        -- Blips bullet speed
+        for i=#boss_attack_lst,1,-1 do
+          if boss_attack_lst[i].getWaitTime() <= nowTime then
+            local status = boss_attack_lst[i].update()
+            if status == false then
+              boss_fire.removeEnemyFireList(i)
+            end
           end
         end
       end
@@ -267,7 +342,5 @@ function love.update(dt)
     end
 
   -- elseif curr_mode == "LOADING" then
-
   end
-
 end

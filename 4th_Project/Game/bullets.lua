@@ -16,6 +16,8 @@ function BULLET.newBullet (pSx, pSy, pBulletSize)
   local active = true
   local killed = false
 
+  -- local battle_mode = "blips"
+
   local wait = function (seg)
     bullet_wait = love.timer.getTime() + seg
     coroutine.yield()
@@ -23,17 +25,33 @@ function BULLET.newBullet (pSx, pSy, pBulletSize)
   local function up()
     while sy > 0 and active == true do
       sy = sy - step -- *Para variar o "passo" da bullet
-      for j = 1,#listabls do
-        if listabls[j].affected(sx, sy, radius) then
-          active = false
-          listabls[j].setHp(-10)
-          if listabls[j].getHp() <= 0 then
-            table.remove(listabls, j) -- TODO CHANGE HERE TO ALLOW/NOT ALLOW DAMADGE FOR TESTS
-            killed = true
-            break
+
+      if curr_battle == "blips" then
+        for j = 1,#listabls do
+          if listabls[j].affected(sx, sy, radius) then
+            active = false
+            listabls[j].setHp(-10)
+            if listabls[j].getHp() <= 0 then
+              table.remove(listabls, j) -- TODO CHANGE HERE TO ALLOW/NOT ALLOW DAMADGE FOR TESTS
+              killed = true
+              break
+            end
+          end
+        end
+      elseif  curr_battle == "boss" then
+        for j = 1,#boss_lst do
+          if boss_lst[j].affected(sx, sy, radius) then
+            active = false
+            boss_lst[j].setHp(-1)
+            if boss_lst[j].getHp() <= 0 then
+              table.remove(boss_lst, j) -- TODO CHANGE HERE TO ALLOW/NOT ALLOW DAMADGE FOR TESTS
+              killed = true
+              break
+            end
           end
         end
       end
+
       wait(speed) -- *Para variar o tempo de espera/velocidade da bullet
     end
   end
