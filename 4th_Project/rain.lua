@@ -1,6 +1,6 @@
 RAIN = {}
 
-
+rain_drop_lst = {}
 
 
 function RAIN.newRainDrop()

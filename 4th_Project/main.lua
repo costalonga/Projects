@@ -9,27 +9,133 @@ local snow = require("snow")
 local rain = require("rain")
 
 
+local function newWeatherControl ()
+  local weather = "clear"
+  local dayTime = "day"
+  local clarity = "normal"
+  local isRaining = false
+  local isSnowing = false
+  local inactiveTime = 0
+  local clock = 0.05
+
+  local wait = function(seg)
+    inactiveTime = love.timer.getTime() + seg
+    coroutine.yield()
+  end
+  local function control()
+    while true do
+      if isRaining then
+        rain.update()
+      elseif isSnowing then
+        snow:update()
+      end
+      wait(clock)
+    end
+  end
+  return {
+    update = coroutine.wrap(control),
+    getInactiveTime = function () return inactiveTime end,
+    setWeather = function (w)
+      weather = w
+      if weather == "raining" then
+        if not isRaining then
+          rain.startRain(350)
+          isRaining = true
+          isSnowing = false
+        end
+      else
+        if isRaining then
+          rain.stopRain()
+          isRaining = false
+        end
+        if weather == "snowing" then
+          if not isSnowing then
+            snow:load(width, height, 30)
+            isSnowing = true
+          end
+        elseif weather == "clear" then
+          isSnowing = false
+          isRaining = false
+        end
+      end
+    end,
+
+    getWeather = function () return weather end,
+    getDayTime = function () return dayTime end,
+    getClarity = function () return clarity end,
+
+    setDayTime = function (d) dayTime = d end,
+    setClarity = function (c) clarity = c end,
+
+    reset = function ()
+      newWeather = nil
+      newDayTime = nil
+      newClarity = nil
+    end,
+
+    draw = function ()
+      if isRaining then
+        rain.draw()
+      elseif isSnowing then
+        snow.draw()
+      end
+    end
+  }
+end
+
+
+-- aux function to check if an item is in an list
+function Set (list)
+  local set = {}
+  for _, l in ipairs(list) do set[l] = true end
+  return set
+end
+
+-- TODO HERE initialize properly
+weather_mode = "raining"
+dayTime_mode = "day"
+clarity_mode = "normal"
+
 function mqttcb(topic, message)
-   -- print("Received from topic: " .. topic .. " - message:" .. message)
-   -- if topic == CHANNEL1 and message == "but1" then
-   if topic == CHANNEL2 and message == "but1" then
-      controle1 = not controle1
-   end
-   if topic == CHANNEL2 and message == "but2" then
-      controle2 = not controle2
-   end
+  if curr_mode == "WAITING" then
+    if topic == "Weather" then
+      local weather_modes = Set {"raining", "snowing", "clear"}
+      -- Asserts that subscriber received a valid message
+      if weather_modes[message] then
+        print("WEATHER: " .. message)
+        weather_control.setWeather(message)
+        ack1 = true
+      end
+    end
 
-   -- TODO delete
-   -- if topic == CHANNEL3 and message == "butbut" then
-   --    controle3 = not controle3
-   -- end
-   if topic == CHANNEL3 then
-      -- message == "butbut"
-      print("RECEIVED FROM CHANNEL 3: \n\t" .. message)
-      controle3 = not controle3
-   end
+    if topic == "DayTime" then
+      local dayTime_modes = Set {"day", "night"}
+      -- Asserts that subscriber received a valid message
+      if dayTime_modes[message] then
+        print("TIME: " .. message)
+        weather_control.setDayTime(message)
+        ack2 = true
+      end
+     end
 
+    if topic == "Clarity" then
+      local clarity_modes = Set {"low", "normal", "high"}
+      -- Asserts that subscriber received a valid message
+      if clarity_modes[message] then
+        print("CLARITY: " .. message)
+        weather_control.setClarity(message)
+        ack3 = true
+      end
+    end
 
+    -- if weather_mode ~= nil and dayTime_mode ~= nil and clarity_mode ~= nil then
+    if ack1 and ack2 and ack3 then
+      mqtt_client:disconnect()
+      curr_mode = "LOADING"
+    else
+      curr_mode = "REQUESTING"
+    end
+  end
 end
 
 --                                                                                Keypressed
@@ -71,34 +177,24 @@ end
 --                                                                                LOVE LOAD
 function love.load()
 
-  -- TODO TESTE MODE
+  mqtt_client = mqtt.client.create("85.119.83.194", 1883, mqttcb)
+
+
+  width = love.graphics.getWidth()
+  height = love.graphics.getHeight()
+
+  -- TODO TESTE MODE to switch
   switch = false
 
-  game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
+  game_modes = {"BATTLING", "NAVIGATING", "REQUESTING", "WAITING", "LOADING"}
   curr_mode = "BATTLING"
   battle_modes = {"blips", "boss"}
   curr_battle = battle_modes[1]
 
-  -- TODO HERE
-  weather_modes = {"raining", "snowing", "clear"}
-  weather_mode = "clear"
-
-  -- Scene size
-  width = love.graphics.getWidth()
-  height = love.graphics.getHeight()
-
-  rain_drop_lst = {}
-
-  if weather_mode == "raining" then
-    -- TODO RAIN
-    rain.startRain(350)
-
-  elseif weather_mode == "snowing" then
-    -- TODO SNOW
-    snow:load(width, height, 30)
-  end
+  weather_control = newWeatherControl()
 
   local curr_directory = "Game/"
+  counter = 1
   bg_img_lst = {love.graphics.newImage(curr_directory .. "Images/bg.png"),
     love.graphics.newImage(curr_directory .. "Images/bg2.png"),
     love.graphics.newImage(curr_directory .. "Images/bg3.png")}
@@ -145,13 +241,19 @@ function love.draw()
   local y = player.getY()
 
 
-
   -- -- TODO SET MODE
-  if switch then
+  -- if not switch then
+  if daytime_mode == "night" then -- TODO TODO
     if curr_mode == "BATTLING" then
       alpha = alpha/2
+
       rect_width = 48
       rect_height = 48
+      -- TODO
+      -- rect_height = 48*1.5 -- great
+      -- rect_height = 48     -- good
+      -- rect_height = 48/1.5 -- bad
+
       blip_color = 1
       -- print("IN SWITCH")
       -- love.graphics.setColor(5, 0, -245, 1)
@@ -220,38 +322,21 @@ function love.draw()
 
     love.graphics.setColor(1, 1, 1, 1)
 
-    if weather_mode == "raining" then
-      -- TODO RAIN
-      rain.draw()
-
-    elseif weather_mode == "snowing" then
-      -- TODO SNOW
-      snow:draw()
-    end
-
+    weather_control.draw()
   end
 end
 
-
 --                                                                                LOVE UPDATE
 function love.update(dt)
-
     -- Update Player
     player.update(dt)
 
-    if weather_mode == "raining" then
-      -- TODO RAIN
-      rain.update()
-
-    elseif weather_mode == "snowing" then
-      -- TODO SNOW
-       snow:update(dt)
+    local nowTime = love.timer.getTime()
+    if weather_control.getInactiveTime() <= nowTime then
+      weather_control.update()
     end
 
-
     if curr_mode == "BATTLING" then
-      local nowTime = love.timer.getTime()
-
       -- Update Items
       if item_generator.getWaitTime() <= nowTime then
         -- time between items creation
@@ -312,7 +397,6 @@ function love.update(dt)
         local level = player.getLV()
         if level==3 or level==5 or level==7 or level==11 or level==13 or level==17 then
           curr_battle = "boss"
-          print("\n\t\tCREATING BOSS\n")
           table.insert(boss_lst, bossClass.newBoss(level * 10))
           print(#boss_lst, boss_lst)
         else
@@ -394,13 +478,34 @@ function love.update(dt)
   elseif curr_mode == "NAVIGATING" then
     if curr_mode ~= player.getMode() then
       counter = counter + 1
-      if counter == 4 then counter = 1 end
+      if counter == #bg_img_lst then counter = 1 end -- reset counter
       bg = {image=bg_img_lst[counter], x1=0, y1=0, x2=0, y2=0, width=0, height=0}
       bg.width = bg.image:getWidth()
       bg.height = bg.image:getHeight()
-      curr_mode = player.getMode()
+      -- curr_mode = player.getMode()
+
+      -- TODO TODO
+      local clientID = "square_invaders"
+      mqtt_client:connect(clientID)
+      mqtt_client:subscribe({"DayTime", "Weather", "Clarity"})
+
+      ack1 = false
+      ack2 = false
+      ack3 = false
+
+      curr_mode = "REQUESTING"
+
     end
 
-  -- elseif curr_mode == "LOADING" then
+  elseif curr_mode == "REQUESTING" then
+    mqtt_client:handler()
+    mqtt_client:publish("request", "weather_status")
+    curr_mode = "WAITING"
+  elseif curr_mode == "WAITING" then
+    mqtt_client:handler()
+
+  elseif curr_mode == "LOADING" then
+    curr_mode = "BATTLING"
+    -- mqtt_client:handler()
   end
 end

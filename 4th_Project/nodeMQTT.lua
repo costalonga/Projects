@@ -18,10 +18,14 @@ local icons = {
   ["50"] = "mist",              -- mist
 }
 
-local CHANNEL1 = "clear"
-local CHANNEL2 = "raining"
-local CHANNEL3 = "snowing"
-local CHANNEL4 = "day_time" -- pass actions via message
+
+local CHANNEL4 = "DayTime" -- pass actions via message
+          local CHANNEL1 = "clear"
+          local CHANNEL2 = "raining"
+          local CHANNEL3 = "snowing"
+
+local CHANNEL5 = "Weather"
+local CHANNEL6 = "Clarity"
 
 
 local m
@@ -51,25 +55,13 @@ function startMqttClientConnection()
       print("connected")
 
       -- fç chamada qdo inscrição ok:
-      m:subscribe(CHANNEL1, 0,
+      m:subscribe("request", 0,
           function (client)
-              print("subscribed to channel /1")
+              print("subscribed to channel request")
           end,
           --fç chamada em caso de falha:
           function(client, reason)
               print("subscription to /1 failed reason: "..reason)
-          end
-      )
-
-      -- fç chamada qdo inscrição ok:
-      m:subscribe(CHANNEL2, 0,
-          function (client)
-              connected = true
-              print("subscribed to channel /2")
-          end,
-          --fç chamada em caso de falha:
-          function(client, reason)
-              print("subscription to /2 failed reason: "..reason)
           end
       )
 
@@ -118,7 +110,6 @@ function send_data()
   end
 end
 
-
 gpio.mode(led2, gpio.OUTPUT)
 gpio.write(led2, gpio.LOW)
 gpio.mode(sw2,gpio.INT,gpio.PULLUP)
@@ -130,11 +121,15 @@ gpio.mode(sw1,gpio.INT,gpio.PULLUP)
 function pressedButton1()
     print("Apertei botao 1 \tchn:" .. CHANNEL1)
     -- m:publish("1421229/1", "but1", 0, 1)
-    m:publish("1421229/2", "but1", 0, 1)
+    m:publish("Weather", "raining", 0, 1)
+    m:publish("DayTime", "night", 0, 1)
+    m:publish("Clarity", "high", 0, 1)
 end
 function pressedButton2()
     print("Apertei botao 2 \tchn:" .. CHANNEL2)
-    m:publish("1421229/2", "but2", 0, 1)
+    m:publish("Weather", "snowing", 0, 1)
+    m:publish("DayTime", "night", 0, 1)
+    m:publish("Clarity", "normal", 0, 1)
 end
 gpio.trig(sw1, "down", pressedButton1)
 gpio.trig(sw2, "down", pressedButton2)

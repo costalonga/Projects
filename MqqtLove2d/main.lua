@@ -27,8 +27,6 @@ function mqttcb(topic, message)
       print("RECEIVED FROM CHANNEL 3: \n\t" .. message)
       controle3 = not controle3
    end
-
-
 end
 
 function love.keypressed(key)

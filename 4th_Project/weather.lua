@@ -1,0 +1,22 @@
+-- local WEATHER_CONTROL = {}
+--
+--
+--
+-- function WEATHER_CONTROL.createWeatherControl ()
+--   local isSnowing = false
+--   local isRaining = false
+--
+-- function WEATHER_CONTROL.
+--
+-- function WEATHER_CONTROL.setWeather (weather)
+--
+--
+-- function WEATHER_CONTROL.update()
+--   if weather == "raining" then
+--     -- TODO RAIN
+--     rain.update()
+--
+--   elseif weather == "snowing" then
+--     -- TODO SNOW
+--      snow:update(dt)
+--   end
