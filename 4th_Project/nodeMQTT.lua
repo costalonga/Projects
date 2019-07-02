@@ -18,19 +18,10 @@ local icons = {
   ["50"] = "mist",              -- mist
 }
 
-local CHANNEL1 = "cleark_sky"
-local CHANNEL2 = "few_clouds"
-local CHANNEL3 = "scattered_clouds"
-local CHANNEL4 = "broken_clouds"
-local CHANNEL5 = "shower_rain"
-local CHANNEL6 = "rain"
-local CHANNEL7 = "thunderstorm"
-local CHANNEL8 = "snow"
-local CHANNEL9 = "mist"
-
-temp = t - 273.15 (convert Kelvin to Celsius)
-if temp > 30 -> HOT
-if temp < 10 -> FREEZING
+local CHANNEL1 = "clear"
+local CHANNEL2 = "raining"
+local CHANNEL3 = "snowing"
+local CHANNEL4 = "day_time"
 
 
 local m

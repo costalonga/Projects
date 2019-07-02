@@ -3,29 +3,9 @@ local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
 local bossClass = require("Game/bosses")
-
 local env = require("envFile")
-
-
-RAIN = {}
-local ww = love.graphics.getWidth()
-local wh = love.graphics.getHeight()
-
-function newRainDrop()
-  local spread = math.random(50, 255)
-  -- local cor = 50
-  local size = spread / 255 * 40
-  local x = math.random(-20, ww + 20)
-  local y = -50
-  local rainDrop = {
-    p1 = {x = x, y = y},
-    p2 = {x = x, y = y + size},
-    prof = spread,
-  }
-  return rainDrop
-end
-
-
+local snow = require("snow")
+local rain = require("rain")
 
 --                                                                                Keypressed
 function love.keypressed(key)
@@ -46,7 +26,7 @@ function love.keypressed(key)
   end
 end
 
-
+--                                                                                  CLEAR ALL
 function clear_all()
   for i = #bullets_list,1,-1 do
     table.remove(bullets_list, i)
@@ -66,9 +46,25 @@ end
 --                                                                                LOVE LOAD
 function love.load()
 
-  for i = 0, 1000 do
-    table.insert(RAIN, newRainDrop())
+  -- TODO HERE
+  weather_modes = {"raining", "snowing", "clear"}
+  weather_mode = "clear"
+
+  -- Scene size
+  width = love.graphics.getWidth()
+  height = love.graphics.getHeight()
+
+  rain_drop_lst = {}
+
+  if weather_mode == "raining" then
+    -- TODO RAIN
+    rain.startRain(350)
+
+  elseif weather_mode == "snowing" then
+    -- TODO SNOW
+    snow:load(width, height, 30)
   end
+
 
   -- TODO TESTE MODE
   switch = false
@@ -114,7 +110,6 @@ function love.load()
   enemy_fire = enemiesClass.newAttackList(listabls)
 
   boss_lst = {}
-  -- table.insert(boss_lst, bossClass.newBoss())
   boss_fire = bossClass.newAttackList(boss_lst)
 end
 
@@ -154,7 +149,6 @@ function love.draw()
                         end,
                         "replace", 1, false)
   love.graphics.setStencilTest("greater", 0)
-  -- love.graphics.circle("fill", 30, 30, 20)
 
   love.graphics.draw(bg.image, bg.x1, bg.y1)
   love.graphics.draw(bg.image, bg.x2, bg.y2)
@@ -189,7 +183,6 @@ function love.draw()
       for i=1,#attack_lst do
         attack_lst[i].draw()
       end
-
     end
 
     -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
@@ -198,7 +191,6 @@ function love.draw()
       bullets_list[i].draw()
     end
 
-
     love.graphics.setColor(250, 0, 0, 1)
     local items_lst = item_generator.getItemsList()
     for i=1,#items_lst do
@@ -206,10 +198,16 @@ function love.draw()
     end
 
     love.graphics.setColor(1, 1, 1, 1)
-    for k, v in ipairs(RAIN) do
-      love.graphics.setColor(28, 93, 155, v.prof)
-      love.graphics.line(v.p1.x, v.p1.y, v.p2.x, v.p2.y)
+
+    if weather_mode == "raining" then
+      -- TODO RAIN
+      rain.draw()
+
+    elseif weather_mode == "snowing" then
+      -- TODO SNOW
+      snow:draw()
     end
+
   end
 end
 
@@ -220,13 +218,15 @@ function love.update(dt)
     -- Update Player
     player.update(dt)
 
-    for k, v in ipairs(RAIN) do
-      v.p1.y = v.p1.y + 20 * (v.prof / 255)
-      v.p2.y = v.p2.y + 20 * (v.prof / 255)
-      if v.p1.y >= wh + 20 then
-        RAIN[k] = newRainDrop()
-      end
+    if weather_mode == "raining" then
+      -- TODO RAIN
+      rain.update()
+
+    elseif weather_mode == "snowing" then
+      -- TODO SNOW
+       snow:update(dt)
     end
+
 
     if curr_mode == "BATTLING" then
       local nowTime = love.timer.getTime()
