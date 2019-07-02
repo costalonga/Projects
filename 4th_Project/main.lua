@@ -98,12 +98,10 @@ function love.load()
     snow:load(width, height, 30)
   end
 
-  -- TODO MAKE BACKGROUND NON GLOBAL
   local curr_directory = "Game/"
   bg_img_lst = {love.graphics.newImage(curr_directory .. "Images/bg.png"),
     love.graphics.newImage(curr_directory .. "Images/bg2.png"),
     love.graphics.newImage(curr_directory .. "Images/bg3.png")}
-  counter = 1 -- TODO MAKE COUNTER NON GLOBARL
 
   love.window.setTitle("Square Invaders")
   font =  {
