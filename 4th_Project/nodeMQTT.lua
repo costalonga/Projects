@@ -57,7 +57,7 @@ function startMqttClientConnection()
       m:on("message",
           function(client, topic, data)
               if topic == "request" then
-                send_weather_data()
+                -- send_weather_data()
               end
             end
           )
@@ -70,19 +70,35 @@ function startMqttClientConnection()
   )
 end
 
+l = true
+l2 = true
 gpio.mode(sw1,gpio.INT,gpio.PULLUP)
 gpio.mode(sw2,gpio.INT,gpio.PULLUP)
 
 function pressedButton1()
+    l2 = not l2
+    local s = "clear"
+    local s2 = "low"
+    if l2 then
+      s = "raining"
+      s2 = "high"
+    end
     print("Apertei botao 1")
-    m:publish("Weather", "raining", 0, 1)
-    m:publish("DayTime", "clear", 0, 1)
-    m:publish("Clarity", "high", 0, 1)
+    m:publish("Weather", s, 0, 1)
+    m:publish("DayTime", "night", 0, 1)
+    m:publish("Clarity", s2, 0, 1)
 end
 function pressedButton2()
     print("Apertei botao 2")
-    m:publish("Weather", "snowing", 0, 1)
-    m:publish("DayTime", "night", 0, 1)
+    l = not l
+    local s = "raining"
+    local s2 = "high"
+    if l then
+      s = "snowing"
+      s2 = "low"
+    end
+    m:publish("Weather", s, 0, 1)
+    m:publish("DayTime", "day", 0, 1)
     m:publish("Clarity", "normal", 0, 1)
 end
 gpio.trig(sw1, "down", pressedButton1)
@@ -143,9 +159,9 @@ function send_weather_data()
             m:publish("Clarity", "low", 0, 1)
             c = "low"
           end
-          print("Weather: "..w)
-          print("Daytime: "..d)
-          print("Clarity: "..c.. " = " .. env_brightness .." lx")
+          print("\n\tWeather: "..w)
+          print("\tDaytime: "..d)
+          print("\tClarity: "..c.. " = " .. env_brightness .." lx")
     end
   end)
 end

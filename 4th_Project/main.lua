@@ -97,7 +97,6 @@ function love.load()
 
   mqtt_client = mqtt.client.create("85.119.83.194", 1883, mqttcb)
 
-
   width = love.graphics.getWidth()
   height = love.graphics.getHeight()
 
@@ -174,6 +173,7 @@ function love.draw()
     end
   end
 
+  -- Limits Player Vision
   love.graphics.stencil(function ()
                           love.graphics.rectangle("fill", x - 15*rect_width/8,
                                                           y - 5*rect_height,

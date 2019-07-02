@@ -44,7 +44,7 @@ function WC.newWeatherControl ()
         end
         if weather == "snowing" then
           if not isSnowing then
-            snow:load(width, height, 30)
+            snow:load(width, height, 100)
             isSnowing = true
           end
         elseif weather == "clear" then
