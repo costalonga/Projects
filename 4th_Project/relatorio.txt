@@ -1,0 +1,65 @@
+Jogabilidade:
+  - Os comandos, itens e objetivos do jogo são os mesmos do relatório apresentado no 2o trabalho (setas para se mover e botão 'a'). Entretanto há novos inimigos, cenários, desafios... mas em relação ao conteúdo da disciplina, diria que as diferenças mais notáveis foram na melhora da estrutura do projeto, reduzindo o acoplamento entre cada componente.
+
+   Para rodar o jogo basta executar a "main.lua" com um interpretador de LÖVE2D e a "nodeMQTT.lua" no ESPlorer (é preciso ter uma chave da API OpenWeatherMap, https://openweathermap.org/api)
+
+   Após eliminar todos os oponentes do cenário, jogador deverá se dirigir até um dos extremos da tela e atravessá-lo (isso foi feito porque queria adicionar outras funcionalidades envolvendo movimentação do jogador num plano cartesiano real alterando seu valor em relação a latitude e longitude, dependendo de qual dos 4 extremos ele escolhesse, para variar as chamadas e regiões da API, porém não consegui terminar de implementar essa funcionalidade).
+
+   Após isto, o jogador irá para o centro da tela, com um fundo levemente diferente. E entrará num modo de espera, irá notificar o nodeMCU através de uma publicação feita no tópico "request" e ficara esperando o node retornar as respostas nos tópicos "Weather", "DayTime" e "Clarity", com isso será gerado um novo cenário e jogador voltará para o modo de batalha.
+
+
+Descrição:
+  Há um total de 6 tipos de componentes no jogo, sendo alguns mais complexos, dividos em submódulos, podendo ter até mais de um nível de encapsulamento. Estes são descritos pelos seguintes arquivos:
+    - "bosses.lua"
+    - "bullets.lua"
+    - "enemies.lua"
+    - "items.lua"
+    - "player.lua"
+    - "weater.lua"
+
+  Todos estão encapsulados com corrotinas, com exceção do "player" que tem seu update chamado o tempo todo.
+
+
+Referências:
+- Links para códigos que adaptei e que utilizei:
+    - https://github.com/cairobatista/love2d-rain_drop_lst (para o efeito de chuva)
+    - https://github.com/Cowa/love-snowflakes-effect  (para gerar o efeito de neve)
+    Apesar dos módulos em si não estarem fazendo uso do encapsulamento por corrotina, no jogo esses módulos são administrados pela "weather.lua", a variavél "weather_control" guarda uma instância desse módulo. Esta por sua vez, está encapsulada por corrotinas e é ela quem irá determinar quando ocorre a update de qualquer um dos dois casos, além de outras funcionalidades do jogo.
+
+Pontos Importantes:
+  - A comunicação utilizada entre o NodeMCU e o LÖVE2D foi feita pelo protocólo MQTT (apesar de achar que nesse caso a ideal seria um TCP simples, pois a troca de dados só ocorre em momentos específicos e há apenas dois clientes se comunicando, bastaria abrir um socket entre os dois enquanto jogador está no estado de espera)
+
+
+Extras:
+  - O repositório possui outro branch onde estava explorando a inversão/translação de coordenadas, entretanto não tive tempo de ajustar pequenos detalhes que ocorriam ao rotacionar 90 graus, provavelmente devido à algum erro de deslocamento, que causou com parte da imagem do background sumisse e jogador não conseguisse ir até algum limite extremo da tela (apesar das inversões de 180 graus terem funcionado corretamente, fiquei sem tempo de implementar mais testes), abaixo a parte comentada correspondente a essa funcionalidade:
+
+      --                                                                                 LOVE DRAW
+      function love.draw()
+      -- TODO adjust Rotation and FLip modes
+      -- if TEMP_SWITCH then
+      --   --          FLIP
+      --   love.graphics.scale(1,-1)
+      --   love.graphics.translate(0, -heightLV)
+      --
+      --   --         MIRROR
+      --   -- TODO: Make it as an "Item" just to confuse everything
+      --   -- love.graphics.scale(-1, 1)
+      --   -- love.graphics.translate(-widthLV, 0)
+      --
+      --   -- -- rotate around the center of the screen by angle radians
+      --   -- love.graphics.translate(-widthLV, 0)
+      --   -- local angle = math.pi/2
+      --   -- love.graphics.translate(widthLV/2, heightLV/2)
+      -- 	--  love.graphics.rotate(angle)
+      --   -- love.graphics.translate(-widthLV/2, -heightLV/2)
+      --   -- -- love.graphics.translate(-heightLV/2, -widthLV/2)
+      --   -- love.graphics.translate(0, 0)
+      --
+      --   -- love.graphics.scale(-1, 1)
+      --   -- love.graphics.translate(-widthLV, 0)
+      --
+      --   -- love.graphics.rotate( math.pi/2 )
+      -- end
+
+
+OBS: Por enquanto, essa versão do jogo não tem mais telas de "GameOver", "Menu", "Pause"
