@@ -6,6 +6,27 @@ local bossClass = require("Game/bosses")
 
 local env = require("envFile")
 
+
+RAIN = {}
+local ww = love.graphics.getWidth()
+local wh = love.graphics.getHeight()
+
+function newRainDrop()
+  local spread = math.random(50, 255)
+  -- local cor = 50
+  local size = spread / 255 * 40
+  local x = math.random(-20, ww + 20)
+  local y = -50
+  local rainDrop = {
+    p1 = {x = x, y = y},
+    p2 = {x = x, y = y + size},
+    prof = spread,
+  }
+  return rainDrop
+end
+
+
+
 --                                                                                Keypressed
 function love.keypressed(key)
   if key == 'a' then
@@ -44,6 +65,10 @@ end
 
 --                                                                                LOVE LOAD
 function love.load()
+
+  for i = 0, 1000 do
+    table.insert(RAIN, newRainDrop())
+  end
 
   -- TODO TESTE MODE
   switch = false
@@ -102,6 +127,8 @@ function love.draw()
   local rect_height = bg.height
   local x = player.getX()
   local y = player.getY()
+
+
 
   -- -- TODO SET MODE
   if switch then
@@ -179,6 +206,10 @@ function love.draw()
     end
 
     love.graphics.setColor(1, 1, 1, 1)
+    for k, v in ipairs(RAIN) do
+      love.graphics.setColor(28, 93, 155, v.prof)
+      love.graphics.line(v.p1.x, v.p1.y, v.p2.x, v.p2.y)
+    end
   end
 end
 
@@ -188,6 +219,14 @@ function love.update(dt)
 
     -- Update Player
     player.update(dt)
+
+    for k, v in ipairs(RAIN) do
+      v.p1.y = v.p1.y + 20 * (v.prof / 255)
+      v.p2.y = v.p2.y + 20 * (v.prof / 255)
+      if v.p1.y >= wh + 20 then
+        RAIN[k] = newRainDrop()
+      end
+    end
 
     if curr_mode == "BATTLING" then
       local nowTime = love.timer.getTime()

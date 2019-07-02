@@ -7,22 +7,34 @@ local sw2 = 2
 local env = require("envFile")
 local OWM_API_endpoint = "http://api.openweathermap.org/data/2.5/weather?id=3451190&APPID=" .. env.getAPIKey() .. "&units=metric"
 local icons = {
-  ["01"] = 1, -- clear sky
-  ["02"] = 2, -- few clouds
-  ["03"] = 3, -- scattered clouds
-  ["04"] = 4, -- broken clouds
-  ["09"] = 9, -- shower rain
-  ["10"] = 10, -- rain
-  ["11"] = 11, -- thunderstorm
+  ["01"] = "cleark_sky",        -- clear sky
+  ["02"] = "few_clouds",        -- few clouds
+  ["03"] = "scattered_clouds",  -- scattered clouds
+  ["04"] = "broken_clouds",     -- broken clouds
+  ["09"] = "shower_rain",       -- shower rain
+  ["10"] = "rain",              -- rain
+  ["11"] = "thunderstorm",      -- thunderstorm
+  ["13"] = "snow",              -- snow
+  ["50"] = "mist",              -- mist
 }
--- TODO organize!!
+
+local CHANNEL1 = "cleark_sky"
+local CHANNEL2 = "few_clouds"
+local CHANNEL3 = "scattered_clouds"
+local CHANNEL4 = "broken_clouds"
+local CHANNEL5 = "shower_rain"
+local CHANNEL6 = "rain"
+local CHANNEL7 = "thunderstorm"
+local CHANNEL8 = "snow"
+local CHANNEL9 = "mist"
+
+temp = t - 273.15 (convert Kelvin to Celsius)
+if temp > 30 -> HOT
+if temp < 10 -> FREEZING
 
 
 local m
 local connected = false
--- local CHANNEL1 = "1421229"
-local CHANNEL1 = "1421229/1"
-local CHANNEL2 = "1421229/2"
 
 local led1State = gpio.LOW
 local led2State = gpio.LOW
