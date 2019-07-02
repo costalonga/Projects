@@ -3,9 +3,34 @@ local bulletsClass = require("Game/bullets")
 local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
 local bossClass = require("Game/bosses")
-local env = require("envFile")
+local mqtt = require("mqtt_library")
+local env  = require("envFile")
 local snow = require("snow")
 local rain = require("rain")
+
+
+function mqttcb(topic, message)
+   -- print("Received from topic: " .. topic .. " - message:" .. message)
+   -- if topic == CHANNEL1 and message == "but1" then
+   if topic == CHANNEL2 and message == "but1" then
+      controle1 = not controle1
+   end
+   if topic == CHANNEL2 and message == "but2" then
+      controle2 = not controle2
+   end
+
+   -- TODO delete
+   -- if topic == CHANNEL3 and message == "butbut" then
+   --    controle3 = not controle3
+   -- end
+   if topic == CHANNEL3 then
+      -- message == "butbut"
+      print("RECEIVED FROM CHANNEL 3: \n\t" .. message)
+      controle3 = not controle3
+   end
+
+
+end
 
 --                                                                                Keypressed
 function love.keypressed(key)
@@ -46,6 +71,14 @@ end
 --                                                                                LOVE LOAD
 function love.load()
 
+  -- TODO TESTE MODE
+  switch = false
+
+  game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
+  curr_mode = "BATTLING"
+  battle_modes = {"blips", "boss"}
+  curr_battle = battle_modes[1]
+
   -- TODO HERE
   weather_modes = {"raining", "snowing", "clear"}
   weather_mode = "clear"
@@ -65,18 +98,8 @@ function love.load()
     snow:load(width, height, 30)
   end
 
-
-  -- TODO TESTE MODE
-  switch = false
-
-  -- TODO USE MQTT CHANNELS TO CHANGE HERE
-  game_modes = {"BATTLING", "NAVIGATING", "LOADING"}
-  curr_mode = "BATTLING"
-  battle_modes = {"blips", "boss"}
-  curr_battle = battle_modes[1]
-  local curr_directory = "Game/"
-
   -- TODO MAKE BACKGROUND NON GLOBAL
+  local curr_directory = "Game/"
   bg_img_lst = {love.graphics.newImage(curr_directory .. "Images/bg.png"),
     love.graphics.newImage(curr_directory .. "Images/bg2.png"),
     love.graphics.newImage(curr_directory .. "Images/bg3.png")}

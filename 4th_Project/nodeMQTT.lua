@@ -21,7 +21,7 @@ local icons = {
 local CHANNEL1 = "clear"
 local CHANNEL2 = "raining"
 local CHANNEL3 = "snowing"
-local CHANNEL4 = "day_time"
+local CHANNEL4 = "day_time" -- pass actions via message
 
 
 local m
