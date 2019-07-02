@@ -98,6 +98,7 @@ function ENEMIES.newAttack (blipXM, blipYL)
       if (y+radius) >= py and (y-radius) <=py2 then
         --          "pegou" no player
         player.setHp(playerDamadge)
+        if player.getHp() <= 0 then player.setMode("DEAD") end
         return true
       end
     end

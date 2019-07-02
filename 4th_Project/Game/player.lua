@@ -12,16 +12,17 @@ function PLAYER.newPlayer ()
   local rect_height = shipImg:getHeight()*3/4
   local rect_width = shipImg:getWidth()*3/4
 
-  local modes = {"BATTLING", "NAVIGATING"}
+  local modes = {"BATTLING", "NAVIGATING", "DEAD"}
   local curr_mode = modes[1]
   local directions = {"left", "right", "up", "down"}
   local last_direction = ""
 
   -- TODO GO BACK
-  -- local speed = 2.5
-  -- local fire_rate = 0.5 -- shoot step
-  local speed = 5.5
-  local fire_rate = 0.25 -- shoot step
+  local speed = 2.5
+  local fire_rate = 0.5 -- shoot step
+  -- TODO test values
+  -- local speed = 5.5
+  -- local fire_rate = 0.25 -- shoot step
 
   local last_shot = 0
   local health = 10

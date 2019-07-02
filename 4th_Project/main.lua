@@ -4,85 +4,8 @@ local playerClass = require("Game/player")
 local itemsClass = require("Game/items")
 local bossClass = require("Game/bosses")
 local mqtt = require("mqtt_library")
+local weather = require("weather")
 local env  = require("envFile")
-local snow = require("snow")
-local rain = require("rain")
-
-
-local function newWeatherControl ()
-  local weather = "clear"
-  local dayTime = "day"
-  local clarity = "normal"
-  local isRaining = false
-  local isSnowing = false
-  local inactiveTime = 0
-  local clock = 0.05
-
-  local wait = function(seg)
-    inactiveTime = love.timer.getTime() + seg
-    coroutine.yield()
-  end
-  local function control()
-    while true do
-      if isRaining then
-        rain.update()
-      elseif isSnowing then
-        snow:update()
-      end
-      wait(clock)
-    end
-  end
-  return {
-    update = coroutine.wrap(control),
-    getInactiveTime = function () return inactiveTime end,
-    setWeather = function (w)
-      weather = w
-      if weather == "raining" then
-        if not isRaining then
-          rain.startRain(350)
-          isRaining = true
-          isSnowing = false
-        end
-      else
-        if isRaining then
-          rain.stopRain()
-          isRaining = false
-        end
-        if weather == "snowing" then
-          if not isSnowing then
-            snow:load(width, height, 30)
-            isSnowing = true
-          end
-        elseif weather == "clear" then
-          isSnowing = false
-          isRaining = false
-        end
-      end
-    end,
-
-    getWeather = function () return weather end,
-    getDayTime = function () return dayTime end,
-    getClarity = function () return clarity end,
-
-    setDayTime = function (d) dayTime = d end,
-    setClarity = function (c) clarity = c end,
-
-    reset = function ()
-      newWeather = nil
-      newDayTime = nil
-      newClarity = nil
-    end,
-
-    draw = function ()
-      if isRaining then
-        rain.draw()
-      elseif isSnowing then
-        snow.draw()
-      end
-    end
-  }
-end
-
 
 -- aux function to check if an item is in an list
 function Set (list)
@@ -91,10 +14,6 @@ function Set (list)
   return set
 end
 
--- TODO HERE initialize properly
-weather_mode = "raining"
-dayTime_mode = "day"
-clarity_mode = "normal"
 
 function mqttcb(topic, message)
   if curr_mode == "WAITING" then
@@ -128,10 +47,9 @@ function mqttcb(topic, message)
       end
     end
 
-    -- if weather_mode ~= nil and dayTime_mode ~= nil and clarity_mode ~= nil then
     if ack1 and ack2 and ack3 then
       mqtt_client:disconnect()
-      curr_mode = "LOADING"
+      curr_mode = "BATTLING"
     else
       curr_mode = "REQUESTING"
     end
@@ -140,7 +58,7 @@ end
 
 --                                                                                Keypressed
 function love.keypressed(key)
-  if key == 'a' then
+  if key == 'a' and player.getMode() ~= "DEAD" then
     if curr_mode == "BATTLING" then
       local last_shot = player.getLastShot()
       if (last_shot == 0) or (last_shot <= love.timer.getTime()) then
@@ -191,7 +109,7 @@ function love.load()
   battle_modes = {"blips", "boss"}
   curr_battle = battle_modes[1]
 
-  weather_control = newWeatherControl()
+  weather_control = weather.newWeatherControl()
 
   local curr_directory = "Game/"
   counter = 1
@@ -240,30 +158,22 @@ function love.draw()
   local x = player.getX()
   local y = player.getY()
 
-
-  -- -- TODO SET MODE
-  -- if not switch then
-  if daytime_mode == "night" then -- TODO TODO
+  if weather_control.getDayTime() == "night" then
     if curr_mode == "BATTLING" then
-      alpha = alpha/2
+      alpha = 2*alpha/3
 
       rect_width = 48
-      rect_height = 48
-      -- TODO
-      -- rect_height = 48*1.5 -- great
-      -- rect_height = 48     -- good
-      -- rect_height = 48/1.5 -- bad
-
+      if weather_control.getClarity() == "low" then
+        rect_height = 48/1.6 --bad
+      elseif weather_control.getClarity() == "normal" then
+        rect_height = 48 --good
+      else
+        rect_height = 48*1.5 -- great
+      end
       blip_color = 1
-      -- print("IN SWITCH")
-      -- love.graphics.setColor(5, 0, -245, 1)
-      -- love.graphics.setColor(0, 250, 0, 0.25)
-    -- else
-      -- love.graphics.setColor(1, 1, 1, 1)
     end
   end
 
-  -- TODO : Adjust so this variable are initialize by Player Position and variate according to the Light from nodeMCU
   love.graphics.stencil(function ()
                           love.graphics.rectangle("fill", x - 15*rect_width/8,
                                                           y - 5*rect_height,
@@ -308,7 +218,6 @@ function love.draw()
       end
     end
 
-    -- love.graphics.setColor(0, 0, 250) -- TODO: Invisible
     love.graphics.setColor(1, 1, 1, 1)
     for i = 1,#bullets_list do
       bullets_list[i].draw()
@@ -390,8 +299,6 @@ function love.update(dt)
 
       -- Check if player survived level
       if curr_battle == "blips" and #listabls == 0 then
-        -- TODO :                                                                       HERE NEW LEVEL
-        -- TODO TEST MODE
         switch = not switch
         player.incLV()
         local level = player.getLV()
@@ -404,7 +311,6 @@ function love.update(dt)
             listabls[i] = enemiesClass.newBlip(level * 10 )
           end
         end
-        -- TODO TEST MODE
         curr_mode = "NAVIGATING"
         clear_all()
         player.setMode(curr_mode)
@@ -419,7 +325,6 @@ function love.update(dt)
         for i=1, 5*level do
           listabls[i] = enemiesClass.newBlip(level * 10 )
         end
-        -- TODO TEST MODE
         curr_mode = "NAVIGATING"
         clear_all()
         player.setMode(curr_mode)
@@ -474,7 +379,6 @@ function love.update(dt)
         end
       end
 
-  -- TODO
   elseif curr_mode == "NAVIGATING" then
     if curr_mode ~= player.getMode() then
       counter = counter + 1
@@ -484,7 +388,6 @@ function love.update(dt)
       bg.height = bg.image:getHeight()
       -- curr_mode = player.getMode()
 
-      -- TODO TODO
       local clientID = "square_invaders"
       mqtt_client:connect(clientID)
       mqtt_client:subscribe({"DayTime", "Weather", "Clarity"})
@@ -492,9 +395,7 @@ function love.update(dt)
       ack1 = false
       ack2 = false
       ack3 = false
-
       curr_mode = "REQUESTING"
-
     end
 
   elseif curr_mode == "REQUESTING" then
@@ -503,9 +404,5 @@ function love.update(dt)
     curr_mode = "WAITING"
   elseif curr_mode == "WAITING" then
     mqtt_client:handler()
-
-  elseif curr_mode == "LOADING" then
-    curr_mode = "BATTLING"
-    -- mqtt_client:handler()
   end
 end

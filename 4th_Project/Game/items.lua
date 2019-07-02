@@ -7,7 +7,7 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
   local radius = 7.5
   local x = love.math.random(radius*4, width - 4*radius)
   local y = love.math.random(height/5, height - 4*radius)
-  local clock = 0.2
+  local clock = 0.1
   local inactiveTime = 0
   local modes = { "inc_speed", "inc_fire_rate", "dec_fire_rate", "dec_speed"}
   local mode = modes[sel]
@@ -29,22 +29,22 @@ function ITEMS.newItem (sel, existence, iniX1, iniY1, iniX2, iniY2)
       if posY1 < y and posY2 > y then
         active = false
 
-        -- TODO: change effects inc to real value but wait untill test finishes
+        -- TODO: test values
         if mode == "inc_speed" then
-          -- effect_value = 0.55
-          effect_value = 1.55
+          effect_value = 0.55
+          -- effect_value = 1.55
 
         elseif mode == "inc_fire_rate" then
-          -- effect_value = -0.1
-          effect_value = -0.55
+          effect_value = -0.1
+          -- effect_value = -0.55
 
         elseif mode == "dec_fire_rate" then
-          -- effect_value = 0.1
-          effect_value = 0.25
+          effect_value = 0.1
+          -- effect_value = 0.25
 
         elseif mode == "dec_speed" then
-          -- effect_value = -0.3
-          effect_value = -0.55
+          effect_value = -0.3
+          -- effect_value = -0.55
         end
         caught = true
       end
@@ -112,8 +112,8 @@ end
 --                                                       -- Item Generator List
 function ITEMS.newItemGenerator (iniX1, iniY1, iniX2, iniY2)
   local lst = {}
-  -- local item_respawn = love.math.random(6,8) -- TODO
-  local item_respawn = love.math.random(2,3)
+  local item_respawn = love.math.random(6,8) -- TODO
+  -- local item_respawn = love.math.random(2,3)
   local await_time = love.timer.getTime() + item_respawn -- game starts without items
 
   local posX1 = iniX1
@@ -123,8 +123,8 @@ function ITEMS.newItemGenerator (iniX1, iniY1, iniX2, iniY2)
 
   local wait = function (seg)
     await_time = love.timer.getTime() + seg
-    -- item_respawn = love.math.random(4,20) -- TODO
-    item_respawn = love.math.random(4,7)
+    item_respawn = love.math.random(4,20) -- TODO
+    -- item_respawn = love.math.random(4,7)
 
     coroutine.yield()
   end
