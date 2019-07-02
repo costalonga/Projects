@@ -57,7 +57,7 @@ function startMqttClientConnection()
       m:on("message",
           function(client, topic, data)
               if topic == "request" then
-                -- send_weather_data()
+                send_weather_data()
               end
             end
           )
