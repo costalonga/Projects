@@ -8,3 +8,6 @@ ESP8266_project/weather_answer.json
 id_weather.json
 latlon_weather.json
 4th_Project/rotating.lua
+4th_Project/envFile.lua
+ESP8266_project/envFile.lua
+MqqtLove2d/envFile.lua
